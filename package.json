@@ -1,0 +1,20 @@
+{
+  "name": "game-ml",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "game-ml": "./bin/global.js"
+  },
+  "preferGlobal": true,
+  "author": "AndiTheMudkip",
+  "license": "ISC",
+  "dependencies": {
+    "command-line-args": "^5.1.1",
+    "command-line-usage": "^6.1.0",
+    "htmljs-parser": "^2.7.1"
+  }
+}
