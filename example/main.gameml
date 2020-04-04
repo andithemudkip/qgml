@@ -1,7 +1,0 @@
-<setup>
-    <actor
-        player
-        name = "andi"
-        age = 19
-    />
-</setup>
