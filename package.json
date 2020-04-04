@@ -11,6 +11,7 @@
   },
   "preferGlobal": true,
   "author": "AndiTheMudkip",
+  "repository": "https://github.com/andithemudkip/game-ml",
   "license": "ISC",
   "dependencies": {
     "command-line-args": "^5.1.1",

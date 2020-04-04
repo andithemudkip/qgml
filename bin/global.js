@@ -1,4 +1,5 @@
-#!/user/bin/env node
+#!/usr/bin/env node
+
 const commandLineArgs = require ('command-line-args')
 const commandLineUsage = require ('command-line-usage')
 
@@ -35,7 +36,7 @@ if (options.help) {
             header: "Options",
             optionList: optionDefinitions,
         }, {
-            content: "Project home: {underline https://github.com/me/example}",
+            content: "Project home: {underline https://github.com/andithemudkip/game-ml}",
     }]);
     console.log (usage);
 } else {
