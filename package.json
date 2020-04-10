@@ -4,7 +4,8 @@
   "description": "",
   "main": "./lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "node ./bin/global.js --src ./example/main.html --serve 8000"
   },
   "bin": {
     "game-ml": "./bin/global.js"
@@ -16,6 +17,8 @@
   "dependencies": {
     "command-line-args": "^5.1.1",
     "command-line-usage": "^6.1.0",
-    "htmljs-parser": "^2.7.1"
+    "express": "^4.17.1",
+    "htmljs-parser": "^2.7.1",
+    "socket.io": "^2.3.0"
   }
 }

@@ -2,8 +2,10 @@
 
 const commandLineArgs = require ('command-line-args');
 const commandLineUsage = require ('command-line-usage');
-const path = require ('path');
-const { compile } = require ('../lib/index');
+const fs = require ('fs');
+const { compile, serve } = require ('../lib/index');
+
+
 
 const optionDefinitions = [{
         name: 'help',
@@ -29,6 +31,13 @@ const optionDefinitions = [{
         type: Number,
         typeLabel: '<port>',
         description: 'Start a server on the specified port hosting the compiled game'
+    }, {
+        name: 'include',
+        alias: 'i',
+        type: String,
+        multiple: true,
+        typeLabel: '<files>',
+        description: `Other JavaScript files to include in the bundled file (ex: matter.min.js, path/to/file.js). If the path is relative, it will first look in the "includes" directory of this module, if it can't find the file there, it will look for it in the directory where you called 'game-ml'\nThis module ships with matter.min.js, p5.min.js.`
     }]
 
 const options = commandLineArgs (optionDefinitions);
@@ -45,16 +54,12 @@ if (options.help) {
     }]);
     console.log (usage);
 } else if (options.src) {
-    let inputPath = path.isAbsolute (options.src) ? options.src : path.join (process.cwd (), options.src);
-    let outputPath = options.output && (path.isAbsolute (options.output) ? options.output : path.join (process.cwd (), options.output)) || inputPath + '.js';
 
-    console.log (inputPath, '->', outputPath);
-
-    compile (inputPath, outputPath);
-
+    let str = compile (options.src, options.output, options.include);
 
     if (options.serve) {
         // start server after compiling
+        serve (options.serve, str);
     }
 
 } else {

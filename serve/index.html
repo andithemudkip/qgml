@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GML Serve</title>
+    <style>
+        body {
+            background-color: rgb(20, 20, 20);
+            padding: 0;
+            margin: 0;
+        }
+        #gml-game {
+            text-align: center;
+            margin: 0;
+            flex: 1;
+        }
+        #game-wrapper {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket = io ();
+        socket.on ('refresh', () => {
+            location.reload (true);
+        });
+    </script>
+    <div id = "game-wrapper">
+        <div id = "gml-game"></div>
+    </div>
+    <script src = "./gml-game.js"></script>
+</body>
+</html>

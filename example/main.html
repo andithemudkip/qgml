@@ -1,0 +1,110 @@
+<!DOCTYPE gml>
+<gml
+    width = 350
+    height = 350
+>
+    <var score = 0/>
+    <class
+        name = "ground"
+        state = ({
+            position: {
+                x: 0,
+                y: 0
+            }
+        })
+    />
+    <world id = "world-1" default>
+        <group
+            class = "player"
+            id = "player"
+            state = ({
+                age: 19,
+                name: 'Andi',
+                position: {
+                    x: 80,
+                    y: 70
+                }
+            })
+        >
+            <actor
+                id = "player-body"
+                state = ({
+                    position: { x: 0, y: 0 },
+                    size: {
+                        width: 20,
+                        height: 30
+                    }
+                })
+            />
+            <actor
+                id = "sword"
+                state = ({
+                    color: "rgb(65, 65, 65)",
+                    size: {
+                        width: 5,
+                        height: 20
+                    },
+                    position: {
+                        x: -5,
+                        y: 15
+                    }
+                })
+            />
+        </group>
+
+        <script>
+            for (let i = 0; i < 10; i++) {
+                GML.spawn ('ground', { // 'ground' is the actor template name
+                    position: { // these are the 'state' overrides
+                        x: i * 10,
+                        y: GML.height - 20
+                    }
+                });
+            }
+        </script>
+
+        <keymapper
+            w = (() => {
+                console.log ('go up');
+                getEntity ('player', 'group').move (0, -5);
+            })
+
+            a = (() => {
+                console.log ('go left');
+                getEntity ('player', 'group').move (-5, 0);
+            })
+            
+            s = (() => {
+                console.log ('go down');
+                getEntity ('player', 'group').move (0, 5);
+            })
+
+            d = (() => {
+                console.log ('go right');
+                getEntity ('player', 'group').move (5, 0);
+            })
+
+            32 = (() => {
+                console.log ('jump');
+                getEntity ('player', 'group').jump ();
+            })
+        />
+    </world>
+    <world id = "world-2">
+        <group name = "another-player" class = "player">
+            <actor
+                id = "player-body"
+            />
+            <actor
+                id = "sword"
+            />
+            <group name = "nested-again" >
+                <group>
+                    <group>
+
+                    </group>
+                </group>
+            </group>
+        </group>    
+    </world>
+</gml>
