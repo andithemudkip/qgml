@@ -1,5 +1,5 @@
 <!DOCTYPE gml>
-<gml
+<qgml
     width = 300
     height = 300
 >
@@ -67,16 +67,10 @@
             state = follower
         />
 
-
-        
-
         <text state = ({ position: { x: 10, y: 70 } })>
             hello there ${name}
             your position is: ${playerPos.x}, ${playerPos.y}
         </text>
-
-
-
 
         <script update>
             follower.position.x += (playerPos.x + playerWidth / 2 - 5 - follower.position.x) / 20;
@@ -144,4 +138,4 @@
             </group>
         </group>    
     </world>
-</gml>
+</qgml>

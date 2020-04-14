@@ -1,4 +1,4 @@
-class GML {
+class QGML {
     constructor () {
         this.p5 = null;
         this.gameManager = null;
@@ -6,9 +6,9 @@ class GML {
     static setup (config) {
         this.gameManager = new this.GameManager (config);
         this.gameManager.createWorlds ();
-        this.ctx = new GML.Context ();
+        this.ctx = new QGML.Context ();
         this.gameManager.createKeymappers ();
-        this.p5 = new p5 (GML.createSketch (config), config.rootElementID);
+        this.p5 = new p5 (QGML.createSketch (config), config.rootElementID);
     }
 
     static createSketch (config) {
@@ -17,71 +17,71 @@ class GML {
         return function (p) {
             p.setup = function () {
                 let canvas = p.createCanvas (width, height);
-                GML.ctx.setVar ('p5', p);
+                QGML.ctx.setVar ('p5', p);
 
                 p.background (0);
                 p.fill (255);
 
-                GML.ctx.eval (GML.gameManager.scripts [GML.World.current.id] ['setup']);
+                QGML.ctx.eval (QGML.gameManager.scripts [QGML.World.current.id] ['setup']);
             }
             p.draw = function () {
-                if (GML.debug && p.frameCount % 60 === 0) {
+                if (QGML.debug && p.frameCount % 60 === 0) {
                     performance.mark ('start-of-draw');
                 }
                 
                 p.background (0);
-                for (let i = 0, n = GML.gameManager.currentGroups.length; i < n; i++) {
-                    GML.gameManager.currentGroups [i].update ();
+                for (let i = 0, n = QGML.gameManager.currentGroups.length; i < n; i++) {
+                    QGML.gameManager.currentGroups [i].update ();
                 }
 
-                for (let i = 0, n = GML.gameManager.currentActors.length; i < n; i++) {
-                    GML.gameManager.currentActors [i].draw (p);
+                for (let i = 0, n = QGML.gameManager.currentActors.length; i < n; i++) {
+                    QGML.gameManager.currentActors [i].draw (p);
                 }
 
-                for (let i = 0, n = GML.gameManager.currentTexts.length; i < n; i++) {
-                    GML.gameManager.currentTexts [i].draw (p);
+                for (let i = 0, n = QGML.gameManager.currentTexts.length; i < n; i++) {
+                    QGML.gameManager.currentTexts [i].draw (p);
                 }
 
                 for (let i = 0,
-                     keys = Object.keys (GML.gameManager.keymappers [GML.World.current.id].keys ["down"]),
+                     keys = Object.keys (QGML.gameManager.keymappers [QGML.World.current.id].keys ["down"]),
                      n = keys.length; i < n; i++) {
                         if (p.keyIsDown (keys [i])) {
-                            GML.gameManager.keymappers [GML.World.current.id].keys ["down"] [keys [i]] ();
+                            QGML.gameManager.keymappers [QGML.World.current.id].keys ["down"] [keys [i]] ();
                         }
                 }
                 for (let i = 0,
-                    keys = Object.keys (GML.gameManager.keymappers [GML.World.current.id].keys ["up"]),
+                    keys = Object.keys (QGML.gameManager.keymappers [QGML.World.current.id].keys ["up"]),
                     n = keys.length; i < n; i++) {
                        if (!p.keyIsDown (keys [i])) {
-                           GML.gameManager.keymappers [GML.World.current.id].keys ["up"] [keys [i]] ();
+                           QGML.gameManager.keymappers [QGML.World.current.id].keys ["up"] [keys [i]] ();
                        }
                 }
                 
 
-                GML.ctx.eval (GML.gameManager.scripts [GML.World.current.id] ['update']);
+                QGML.ctx.eval (QGML.gameManager.scripts [QGML.World.current.id] ['update']);
 
-                if (GML.debug) {
+                if (QGML.debug) {
                     p.fill (255);
-                    p.text (`${Math.round (GML.frameRate)} fps`, 5, 15);
-                    p.text (`${GML.frameTime.toFixed (3)} ms frame time`, 5, 35);
+                    p.text (`${Math.round (QGML.frameRate)} fps`, 5, 15);
+                    p.text (`${QGML.frameTime.toFixed (3)} ms frame time`, 5, 35);
 
                     if (p.frameCount % 60 == 0) {
                         performance.measure ('measure frame time', 'start-of-draw');
                         let perf = performance.getEntriesByName ('measure frame time');
-                        GML.frameTime = perf [0].duration;
-                        GML.frameRate = p.frameRate ();
+                        QGML.frameTime = perf [0].duration;
+                        QGML.frameRate = p.frameRate ();
                         performance.clearMeasures ();
                     }
                 }
             }
             p.keyPressed = function () {
-                if (GML.gameManager.keymappers [GML.World.current.id].keys ["pressed"] [p.keyCode]) {
-                    GML.gameManager.keymappers [GML.World.current.id].keys ["pressed"] [p.keyCode] ();
+                if (QGML.gameManager.keymappers [QGML.World.current.id].keys ["pressed"] [p.keyCode]) {
+                    QGML.gameManager.keymappers [QGML.World.current.id].keys ["pressed"] [p.keyCode] ();
                 }
             }
             p.keyReleased = function () {
-                if (GML.gameManager.keymappers [GML.World.current.id].keys ["released"] [p.keyCode]) {
-                    GML.gameManager.keymappers [GML.World.current.id].keys ["released"] [p.keyCode] ();
+                if (QGML.gameManager.keymappers [QGML.World.current.id].keys ["released"] [p.keyCode]) {
+                    QGML.gameManager.keymappers [QGML.World.current.id].keys ["released"] [p.keyCode] ();
                 }
             }
             
@@ -91,14 +91,14 @@ class GML {
     }
 }
 
-GML.debug = true;
-GML.frameRate = 0;
-GML.frameTime = 0;
+QGML.debug = true;
+QGML.frameRate = 0;
+QGML.frameTime = 0;
 
-GML.Context = function () {
-    var _gmlVars = GML.gameManager ? Object.assign ({},
-        GML.gameManager.vars ['global'],
-        GML.gameManager.vars [GML.gameManager.selectedWorld.id]) : [];
+QGML.Context = function () {
+    var _gmlVars = QGML.gameManager ? Object.assign ({},
+        QGML.gameManager.vars ['global'],
+        QGML.gameManager.vars [QGML.gameManager.selectedWorld.id]) : [];
 
     let keys = Object.keys (_gmlVars);
 
@@ -113,7 +113,7 @@ GML.Context = function () {
     /* user call-able functions here */
 
     function getEntity (id, type = "actor") {
-        return GML.World.current.actors.find (a => a.id === id);
+        return QGML.World.current.actors.find (a => a.id === id);
     }
 
     this.eval = function (str, debug) {
@@ -122,10 +122,10 @@ GML.Context = function () {
         if (debug) console.log (res, str);
 
         for (key of keys) {
-            if (GML.gameManager.vars [GML.World.current.id].hasOwnProperty (key)) {
-                GML.gameManager.setVar (GML.World.current.id, key, eval (key));
+            if (QGML.gameManager.vars [QGML.World.current.id].hasOwnProperty (key)) {
+                QGML.gameManager.setVar (QGML.World.current.id, key, eval (key));
             } else {
-                GML.gameManager.setVar ('global', key, eval (key));
+                QGML.gameManager.setVar ('global', key, eval (key));
             }
         }
 
@@ -137,7 +137,7 @@ GML.Context = function () {
     }
 }
 
-GML.Keymapper = class Keymapper {
+QGML.Keymapper = class Keymapper {
     constructor (obj) {
         this.keys = {
             down: {},
@@ -156,8 +156,8 @@ GML.Keymapper = class Keymapper {
         
         Object.keys (obj).forEach (key => {
             let opts = key.split ('|');
-            let keyCode = GML.Keymapper.keyCodeFromString (opts [0]);
-            this.keys [opts [1] || 'pressed'] [keyCode] = GML.ctx.eval (obj [key]);
+            let keyCode = QGML.Keymapper.keyCodeFromString (opts [0]);
+            this.keys [opts [1] || 'pressed'] [keyCode] = QGML.ctx.eval (obj [key]);
         });
     }
 
@@ -169,9 +169,9 @@ GML.Keymapper = class Keymapper {
             if (str.length === 1) {
                 keyCode = str.toUpperCase ().charCodeAt (0);
             } else {
-                Object.keys (GML.Keymapper.keyTable).forEach (key => {
+                Object.keys (QGML.Keymapper.keyTable).forEach (key => {
                     if (str.toUpperCase () === key) {
-                        keyCode = GML.Keymapper.keyTable [key];
+                        keyCode = QGML.Keymapper.keyTable [key];
                     }
                 })
             }
@@ -180,7 +180,7 @@ GML.Keymapper = class Keymapper {
     }
 }
 
-GML.Keymapper.keyTable = {
+QGML.Keymapper.keyTable = {
     BACKSPACE: 8,
     DELETE: 46,
     ENTER: 13,
@@ -198,7 +198,7 @@ GML.Keymapper.keyTable = {
     SPACE: 32
 }
 
-GML.Text = class Text {
+QGML.Text = class Text {
     constructor ({ group = null, state = "", value = "", id = 'default-text' }, worldObj) {
         this.id = id;
         this.group = worldObj.groups.find (grp => grp.name === group);
@@ -227,9 +227,9 @@ GML.Text = class Text {
         }
 
         if (this.originalState) {
-            this.state = GML.ctx.eval (this.originalState);
+            this.state = QGML.ctx.eval (this.originalState);
             if (!this.state.color) this.state.color = 255;
-            this.value = GML.ctx.eval ("`" + this.originalValue + "`");
+            this.value = QGML.ctx.eval ("`" + this.originalValue + "`");
         }
 
         p.fill (p.color (this.state.color));
@@ -238,7 +238,7 @@ GML.Text = class Text {
     }
  }
 
-GML.Actor = class Actor {
+QGML.Actor = class Actor {
     constructor ({ group = null, state = "", id = 'default-actor' }, worldObj) {
         this.id = id;
         this.group = worldObj.groups.find (grp => grp.name === group);
@@ -273,12 +273,12 @@ GML.Actor = class Actor {
 
         // update the state
         if (this.originalState) {
-            this.state = GML.ctx.eval (this.originalState);
+            this.state = QGML.ctx.eval (this.originalState);
         }
     }
 }
 
-GML.Group = class Group {
+QGML.Group = class Group {
     constructor ({ parent = null, world = 'default-world', name = 'default-group', state = {} }, worldObj) {
         this.parent = parent;
         this.world = world;
@@ -303,11 +303,11 @@ GML.Group = class Group {
 
     update () {
         if (!this.parentObject) {
-            this.parentObject = GML.World.current.groups.find (g => g.name === this.parent);
+            this.parentObject = QGML.World.current.groups.find (g => g.name === this.parent);
         }
 
         if (this.originalState) {
-            this.state = GML.ctx.eval (this.originalState);
+            this.state = QGML.ctx.eval (this.originalState);
             this.absolutePosition = this.state.position;
         }
 
@@ -320,7 +320,7 @@ GML.Group = class Group {
     }
 }
 
-GML.World = class World {
+QGML.World = class World {
     constructor ({ id = 'default-world', state = {}, groups = [], actors = [], texts = [], events = [] }) {
         this.id = id;
         this.state = state;
@@ -331,13 +331,13 @@ GML.World = class World {
         this.createEntities = this.createEntities.bind (this);
     }
     createEntities () {
-        this.groups = this.groups.map (group => new GML.Group (group, this));
-        this.actors = this.actors.map (actor => new GML.Actor (actor, this));
-        this.texts = this.texts.map (text => new GML.Text (text, this));
+        this.groups = this.groups.map (group => new QGML.Group (group, this));
+        this.actors = this.actors.map (actor => new QGML.Actor (actor, this));
+        this.texts = this.texts.map (text => new QGML.Text (text, this));
     }
 }
 
-GML.GameManager = class GameManager {
+QGML.GameManager = class GameManager {
     constructor (config) {
         this.config = config;
         this.keymappers = {};
@@ -355,7 +355,7 @@ GML.GameManager = class GameManager {
     }
 
     createWorlds () {
-        this.worlds = this.config.worlds.map (world => new GML.World (world));
+        this.worlds = this.config.worlds.map (world => new QGML.World (world));
         this.worlds.forEach (world => world.createEntities ());
         this.defaultWorld = this.config.defaultWorld;
         this.selectedWorld = this.defaultWorld;
@@ -365,7 +365,7 @@ GML.GameManager = class GameManager {
 
     createKeymappers () {
         Object.keys (this.config.keymappers).forEach (key => {
-            this.keymappers [key] = new GML.Keymapper (this.config.keymappers [key]);
+            this.keymappers [key] = new QGML.Keymapper (this.config.keymappers [key]);
         });
     }
 
@@ -378,7 +378,7 @@ GML.GameManager = class GameManager {
         this.currentGroups = this.selectedWorld.groups;
         this.currentActors = this.selectedWorld.actors;
         this.currentTexts = this.selectedWorld.texts;
-        GML.World.current = this.selectedWorld;
+        QGML.World.current = this.selectedWorld;
     }
 
     findWorld (id) {

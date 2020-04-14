@@ -1,15 +1,15 @@
 {
-  "name": "game-ml",
+  "name": "@qgml/cli",
   "version": "1.0.1",
-  "description": "",
+  "description": "Quick Game Markup Language",
   "main": "./lib/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "compile": "node ./bin/global.js -S ./example/main.html --serve 8000",
-    "dev": "terser ./includes/gml-core.js --compress > ./includes/gml-core.min.js && node ./bin/global.js -S ./example/main.html --serve 8000"
+    "dev": "terser ./includes/qgml-core.js --compress > ./includes/qgml-core.min.js && node ./bin/global.js -S ./example/main.html --serve 8000"
   },
   "bin": {
-    "game-ml": "./bin/global.js"
+    "qgml": "./bin/global.js"
   },
   "preferGlobal": true,
   "author": "AndiTheMudkip",

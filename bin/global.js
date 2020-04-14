@@ -42,14 +42,14 @@ const optionDefinitions = [{
     }, {
         name: 'standalone',
         type: Boolean,
-        description: 'Only include the game-specific configuration, not gml-core and p5.js. If you wish to use this option you must already be importing p5.js and gml-core.js on your page {bold before the script tag for the game}.'
+        description: 'Only include the game-specific configuration, not qgml-core and p5.js. If you wish to use this option you must already be importing p5.js and qgml-core.js on your page {bold before the script tag for the game}.'
     }]
 
 const options = commandLineArgs (optionDefinitions);
 
 if (options.help) {
     const usage = commandLineUsage ([{
-            header: "Game Markup Language",
+            header: "Quick Game Markup Language",
             content: "A CLI for compiling game-ml files to JavaScript",
         }, {
             header: "Options",
