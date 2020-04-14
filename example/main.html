@@ -1,7 +1,7 @@
 <!DOCTYPE gml>
 <gml
-    width = 350
-    height = 350
+    width = 300
+    height = 300
 >
     <var score = 0/>
     <class
@@ -10,20 +10,29 @@
             position: {
                 x: 0,
                 y: 0
+            },
+            size: {
+                width: 50,
+                height: 20
             }
         })
     />
     <world id = "world-1" default>
+        <var score = 0/>
+        <var
+            playerWidth = 20
+            playerPos = ({
+                x: 10,
+                y: 50
+            })
+            shouldRun = false
+            name = "andi"
+        />
         <group
             class = "player"
             id = "player"
             state = ({
-                age: 19,
-                name: 'Andi',
-                position: {
-                    x: 80,
-                    y: 70
-                }
+                position: playerPos
             })
         >
             <actor
@@ -31,65 +40,93 @@
                 state = ({
                     position: { x: 0, y: 0 },
                     size: {
-                        width: 20,
-                        height: 30
-                    }
-                })
-            />
-            <actor
-                id = "sword"
-                state = ({
-                    color: "rgb(65, 65, 65)",
-                    size: {
-                        width: 5,
+                        width: playerWidth,
                         height: 20
                     },
-                    position: {
-                        x: -5,
-                        y: 15
-                    }
+                    color: 'red'
                 })
             />
         </group>
 
-        <script>
-            for (let i = 0; i < 10; i++) {
-                GML.spawn ('ground', { // 'ground' is the actor template name
-                    position: { // these are the 'state' overrides
-                        x: i * 10,
-                        y: GML.height - 20
+        <var
+            follower = ({
+                    color: 'green',
+                    size: {
+                        width: 10,
+                        height: 10
+                    },
+                    position: {
+                        x: 0,
+                        y: 0
                     }
-                });
-            }
+                })
+        />
+
+        <actor
+            id = "follower"
+            state = follower
+        />
+
+
+        
+
+        <text state = ({ position: { x: 10, y: 70 } })>
+            hello there ${name}
+            your position is: ${playerPos.x}, ${playerPos.y}
+        </text>
+
+
+
+
+        <script update>
+            follower.position.x += (playerPos.x + playerWidth / 2 - 5 - follower.position.x) / 20;
+            follower.position.y += (playerPos.y + playerWidth / 2 - 5 - follower.position.y) / 20;
         </script>
 
         <keymapper
-            w = (() => {
-                console.log ('go up');
-                getEntity ('player', 'group').move (0, -5);
+            w|down = (() => {
+                if (shouldRun) {
+                    playerPos.y -= 3;
+                } else {
+                    playerPos.y --;
+                }
             })
 
-            a = (() => {
-                console.log ('go left');
-                getEntity ('player', 'group').move (-5, 0);
+            a|down = (() => {
+                if (shouldRun) {
+                    playerPos.x -= 3;
+                } else {
+                    playerPos.x --;
+                }
+            })
+
+            d|down = (() => {
+                if (shouldRun) {
+                    playerPos.x += 3;
+                } else {
+                    playerPos.x ++;
+                }
             })
             
-            s = (() => {
-                console.log ('go down');
-                getEntity ('player', 'group').move (0, 5);
+            s|down = (() => {
+                if (shouldRun) {
+                    playerPos.y += 3;
+                } else {
+                    playerPos.y ++;
+                }
             })
 
-            d = (() => {
-                console.log ('go right');
-                getEntity ('player', 'group').move (5, 0);
+            shift|pressed = (() => {
+                shouldRun = true;
             })
 
-            32 = (() => {
-                console.log ('jump');
-                getEntity ('player', 'group').jump ();
+            shift|released = (() => {
+                shouldRun = false;
             })
+
         />
     </world>
+    <var score2 = 0/>
     <world id = "world-2">
         <group name = "another-player" class = "player">
             <actor

@@ -30,10 +30,17 @@
         socket.on ('refresh', () => {
             location.reload (true);
         });
+
+        socket.on ('js-inject', data => {
+            let script = document.createElement ('script');
+            script.innerHTML = data;
+            script.id = 'gml-js-inject';
+            document.body.append (script);
+        })
     </script>
     <div id = "game-wrapper">
         <div id = "gml-game"></div>
     </div>
-    <script src = "./gml-game.js"></script>
+    <!-- <script src = "./gml-game.js"></script> -->
 </body>
 </html>

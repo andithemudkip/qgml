@@ -5,7 +5,8 @@
   "main": "./lib/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "compile": "node ./bin/global.js --src ./example/main.html --serve 8000"
+    "compile": "node ./bin/global.js -S ./example/main.html --serve 8000",
+    "dev": "terser ./includes/gml-core.js --compress > ./includes/gml-core.min.js && node ./bin/global.js -S ./example/main.html --serve 8000"
   },
   "bin": {
     "game-ml": "./bin/global.js"
