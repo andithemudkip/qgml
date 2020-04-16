@@ -6,7 +6,6 @@ const fs = require ('fs');
 const { compile, serve } = require ('../lib/index');
 
 
-
 const optionDefinitions = [{
         name: 'help',
         alias: 'h',
@@ -59,13 +58,13 @@ if (options.help) {
     }]);
     console.log (usage);
 } else if (options.source) {
-    console.log (options.standalone);
-    let str = compile (options.source, options.output, options.include, options.standalone);
-
-    if (options.serve) {
-        serve (options.serve, str);
-    }
-
+    let str = "";
+    (async () => {
+        str = await compile (options.source, options.output, options.include, options.standalone);
+        if (options.serve !== undefined) {
+            serve (options.serve, str);
+        }
+    }) ();
 } else {
     console.log (options);
 }

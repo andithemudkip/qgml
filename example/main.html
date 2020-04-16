@@ -20,7 +20,8 @@
     <world id = "world-1" default>
         <var score = 0/>
         <var
-            playerWidth = 20
+            playerWidth = 24
+            playerHeight = 24
             playerPos = ({
                 x: 10,
                 y: 50
@@ -41,14 +42,29 @@
                     position: { x: 0, y: 0 },
                     size: {
                         width: playerWidth,
-                        height: 20
+                        height: playerHeight
                     },
-                    color: 'red'
+                    color: 'rgba(0,0,0,0)'
+                })
+                
+                animator = ({
+                    spritesheets: {
+                        idle: {
+                            strip: './assets/noBKG_KnightIdle_strip.png',
+                            frames: 15,
+                            frameTime: 5
+                        },
+                        run: {
+                            strip: './assets/noBKG_KnightRun_strip.png',
+                            frames: 8,
+                            frameTime: 5
+                        }
+                    }
                 })
             />
         </group>
 
-        <var
+        <!-- <var
             follower = ({
                     color: 'green',
                     size: {
@@ -67,55 +83,101 @@
             state = follower
         />
 
+        <script update>
+            follower.position.x += (playerPos.x + playerWidth / 2 - 5 - follower.position.x) / 20;
+            follower.position.y += (playerPos.y + playerWidth / 2 - 5 - follower.position.y) / 20;
+        </script> -->
+
         <text state = ({ position: { x: 10, y: 70 } })>
             hello there ${name}
             your position is: ${playerPos.x}, ${playerPos.y}
         </text>
 
-        <script update>
-            follower.position.x += (playerPos.x + playerWidth / 2 - 5 - follower.position.x) / 20;
-            follower.position.y += (playerPos.y + playerWidth / 2 - 5 - follower.position.y) / 20;
-        </script>
 
         <keymapper
             w|down = (() => {
                 if (shouldRun) {
-                    playerPos.y -= 3;
+                    playerPos.y -= 5;
                 } else {
-                    playerPos.y --;
+                    playerPos.y -= 3;
                 }
             })
 
             a|down = (() => {
                 if (shouldRun) {
-                    playerPos.x -= 3;
+                    playerPos.x -= 5;
                 } else {
-                    playerPos.x --;
+                    playerPos.x -= 3;
                 }
             })
-
+            
             d|down = (() => {
                 if (shouldRun) {
-                    playerPos.x += 3;
+                    playerPos.x += 5;
                 } else {
-                    playerPos.x ++;
+                    playerPos.x += 3;
                 }
             })
             
             s|down = (() => {
                 if (shouldRun) {
-                    playerPos.y += 3;
+                    playerPos.y += 5;
                 } else {
-                    playerPos.y ++;
+                    playerPos.y += 3;
                 }
             })
 
+            
+
+            a|released = (() => {
+                getActor ('player-body').animator.set ('idle');
+            })
+
+            d|released = (() => {
+                getActor ('player-body').animator.set ('idle');
+            })
+
+            w|released = (() => {
+                getActor ('player-body').animator.set ('idle');
+            })
+
+
+            s|released = (() => {
+                getActor ('player-body').animator.set ('idle');
+            })
+
+
+            a|pressed = (() => {
+                getActor ('player-body').direction.set ('horizontal', 'left')
+                getActor ('player-body').animator.set ('run');
+            })
+
+            d|pressed = (() => {
+                getActor ('player-body').direction.set ('horizontal', 'right');
+                getActor ('player-body').animator.set ('run');
+            })
+            
+            w|pressed = (() => {
+                getActor ('player-body').animator.set ('run');
+            })
+
+            s|pressed = (() => {
+                getActor ('player-body').animator.set ('run');
+            })
+
+
+
+
+            
+
             shift|pressed = (() => {
                 shouldRun = true;
+                getActor ('player-body').animator.set ('run');
             })
 
             shift|released = (() => {
                 shouldRun = false;
+                getActor ('player-body').animator.set ('idle');
             })
 
         />

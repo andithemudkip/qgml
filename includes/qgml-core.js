@@ -15,14 +15,25 @@ class QGML {
         const { width, height, assets } = config;
 
         return function (p) {
+            p.preload = function () {
+                for (let i = 0, sheets = assets.spritesheets; i < sheets.length; i++) {
+                    for (let j = 0; j < sheets [i].frames.length; j++) {
+                        assets.spritesheets [i].frames [j] = p.loadImage (sheets [i].frames [j]);
+                    }
+                }
+                QGML.gameManager.assets = assets;
+            }
             p.setup = function () {
                 let canvas = p.createCanvas (width, height);
                 QGML.ctx.setVar ('p5', p);
 
                 p.background (0);
                 p.fill (255);
+                p.frameRate (60); //idk why it doesn't work
 
-                QGML.ctx.eval (QGML.gameManager.scripts [QGML.World.current.id] ['setup']);
+
+                if (QGML.gameManager.scripts [QGML.World.current.id])
+                    QGML.ctx.eval (QGML.gameManager.scripts [QGML.World.current.id] ['setup']);
             }
             p.draw = function () {
                 if (QGML.debug && p.frameCount % 60 === 0) {
@@ -56,9 +67,9 @@ class QGML {
                            QGML.gameManager.keymappers [QGML.World.current.id].keys ["up"] [keys [i]] ();
                        }
                 }
-                
 
-                QGML.ctx.eval (QGML.gameManager.scripts [QGML.World.current.id] ['update']);
+                if (QGML.gameManager.scripts [QGML.World.current.id])
+                    QGML.ctx.eval (QGML.gameManager.scripts [QGML.World.current.id] ['update']);
 
                 if (QGML.debug) {
                     p.fill (255);
@@ -84,10 +95,7 @@ class QGML {
                     QGML.gameManager.keymappers [QGML.World.current.id].keys ["released"] [p.keyCode] ();
                 }
             }
-            
-            
         }
-
     }
 }
 
@@ -112,23 +120,19 @@ QGML.Context = function () {
 
     /* user call-able functions here */
 
-    function getEntity (id, type = "actor") {
+    function getActor (id) {
         return QGML.World.current.actors.find (a => a.id === id);
     }
 
-    this.eval = function (str, debug) {
+    this.eval = function (str) {
         let res = eval (str)
-
-        if (debug) console.log (res, str);
-
         for (key of keys) {
-            if (QGML.gameManager.vars [QGML.World.current.id].hasOwnProperty (key)) {
+            if (key in QGML.gameManager.vars [QGML.World.current.id]) {
                 QGML.gameManager.setVar (QGML.World.current.id, key, eval (key));
             } else {
                 QGML.gameManager.setVar ('global', key, eval (key));
             }
         }
-
         return res;
     }
 
@@ -232,15 +236,18 @@ QGML.Text = class Text {
             this.value = QGML.ctx.eval ("`" + this.originalValue + "`");
         }
 
-        p.fill (p.color (this.state.color));
-        p.text (this.value, pos.x, pos.y);
+        // p.fill (p.color (this.state.color));
+        // p.text (this.value, pos.x, pos.y);
 
     }
  }
 
 QGML.Actor = class Actor {
-    constructor ({ group = null, state = "", id = 'default-actor' }, worldObj) {
+    constructor ({ group = null, state = "", id = 'default-actor', sprite, animator }, worldObj) {
         this.id = id;
+        this.sprite = sprite;
+        this.animator = QGML.Animator.Create (animator);
+
         this.group = worldObj.groups.find (grp => grp.name === group);
         this.state = {
             position: {
@@ -254,10 +261,39 @@ QGML.Actor = class Actor {
             color: 255
         };
         this.originalState = state;
-    }
 
+
+        this.scale = {
+            x: 1,
+            y: 1
+        }
+
+        this.direction = {
+            x: 1,
+            y: 1,
+            set: (axis, value) => {
+                if (axis === 'horizontal') {
+                    if (value === 'left' || value === -1) this.direction.x = -1;
+                    else if (value === 'right' || value === 1) this.direction.x = 1;
+                } else if (axis === 'vertical') {
+                    if (value === 'up' || value === 1) this.direction.x = 1;
+                    else if (value === 'down' || value === -1) this.direction.x = -1;
+                }
+            }
+        }
+
+        this.flip = {
+            horizontal: () => {
+                this.direction.x = - this.direction.x;
+            },
+            vertical: () => {
+                this.direction.y = - this.direction.y;
+            }
+        }
+    }
     draw (p) {
         if (this.state.size.width && this.state.size.height) {
+            p.push ();
             let pos = {
                 x: this.state.position.x,
                 y: this.state.position.y
@@ -269,12 +305,85 @@ QGML.Actor = class Actor {
             p.fill (p.color (this.state.color));
             
             p.rect (pos.x, pos.y, this.state.size.width, this.state.size.height);
+
+            if (this.animator) {
+                p.imageMode (p.CENTER);
+                p.translate (pos.x + this.state.size.width / 2, pos.y + this.state.size.height / 2);
+                p.scale (this.scale.x * this.direction.x, this.scale.y * this.direction.y);
+                p.image (this.animator.getFrame (), 0, 0);
+            }
+            p.pop ();
         }
 
         // update the state
         if (this.originalState) {
             this.state = QGML.ctx.eval (this.originalState);
         }
+        if (this.animator) this.animator.update ();
+    }
+}
+
+QGML.Animator = class Animator {
+    constructor ({ spritesheets }) {
+        this.spritesheets = spritesheets;
+        this.selectedSheet = null;
+        for (let i = 0, keys = Object.keys (this.spritesheets); i < keys.length; i++) {
+            if (this.spritesheets [keys [i]].default) {
+                this.selectedSheet = keys [i];
+                this.currentFrames = QGML.gameManager.findAsset ('spritesheets', this.spritesheets [keys [i]].name).frames;
+                this.frameTime = QGML.gameManager.findAsset ('spritesheets', this.spritesheets [keys [i]].name).frameTime || 1;
+                
+            }
+        }
+        if (!this.selectedSheet) {
+            let key = Object.keys (this.spritesheets) [0];
+            this.selectedSheet = key;
+            this.currentFrames = QGML.gameManager.findAsset ('spritesheets', this.spritesheets [key].name).frames;
+            this.frameTime = QGML.gameManager.findAsset ('spritesheets', this.spritesheets [key].name).frameTime || 1;
+        }
+
+        this.currentFrame = 0;
+        this.count = 0;
+    }
+
+    update () {
+        this.count ++;
+        if (this.count > this.frameTime) {
+            this.nextFrame ();
+            this.count = 0;
+        }
+    }
+
+    nextFrame () {
+        if (this.currentFrame + 1 < this.currentFrames.length) {
+            this.currentFrame ++;
+        } else {
+            this.currentFrame = 0;
+        }
+    }
+
+    getFrame () {
+        return this.currentFrames [this.currentFrame];
+    }
+
+    set (name) {
+        if (name != this.selectedSheet) {
+            for (let i = 0, keys = Object.keys (this.spritesheets); i < keys.length; i++) {
+                if (keys [i] === name) {
+                    this.selectedSheet = keys [i];
+                    this.currentFrames = QGML.gameManager.findAsset ('spritesheets', this.spritesheets [keys [i]].name).frames;
+                    this.frameTime = QGML.gameManager.findAsset ('spritesheets', this.spritesheets [keys [i]].name).frameTime || 1;
+                    this.currentFrame = 0;
+                    this.count = 0;
+                }
+            }
+        }
+    }
+
+    static Create (animator) {
+        if (animator && animator.spritesheets) {
+            return new QGML.Animator (animator);
+        } else return null;
     }
 }
 
@@ -342,6 +451,7 @@ QGML.GameManager = class GameManager {
         this.config = config;
         this.keymappers = {};
         this.scripts = config.scripts;
+        this.assets = config.assets;
         
         this.vars = config.vars;
         this.defaultWorld = config.defaultWorld;
@@ -351,6 +461,7 @@ QGML.GameManager = class GameManager {
         this.findWorld = this.findWorld.bind (this);
         this.createWorlds = this.createWorlds.bind (this);
         this.createKeymappers = this.createKeymappers.bind (this);
+        this.findAsset = this.findAsset.bind (this);
         
     }
 
@@ -383,5 +494,9 @@ QGML.GameManager = class GameManager {
 
     findWorld (id) {
         return this.worlds.find (world => world.id === id);
+    }
+
+    findAsset (type, name) {
+        return this.assets [type].find (a => a.name === name) || {};
     }
 }

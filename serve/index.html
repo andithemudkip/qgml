@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GML Serve</title>
+    <title>QGML Serve</title>
     <style>
         body {
             background-color: rgb(20, 20, 20);
@@ -34,7 +34,7 @@
         socket.on ('js-inject', data => {
             let script = document.createElement ('script');
             script.innerHTML = data;
-            script.id = 'gml-js-inject';
+            script.id = 'qgml-js-inject';
             document.body.append (script);
         })
     </script>

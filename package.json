@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "compile": "node ./bin/global.js -S ./example/main.html --serve 8000",
-    "dev": "terser ./includes/qgml-core.js --compress > ./includes/qgml-core.min.js && node ./bin/global.js -S ./example/main.html --serve 8000"
+    "dev": "terser ./includes/qgml-core.js --compress > ./includes/qgml-core.min.js && node ./bin/global.js -S ./example/main.html --serve"
   },
   "bin": {
     "qgml": "./bin/global.js"
@@ -20,6 +20,7 @@
     "command-line-usage": "^6.1.0",
     "express": "^4.17.1",
     "htmljs-parser": "^2.7.1",
+    "sharp": "^0.25.2",
     "socket.io": "^2.3.0"
   }
 }
