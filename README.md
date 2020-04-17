@@ -47,18 +47,18 @@ $ qgml --help
 ```html
 <qgml
 	width = 300
-    height = 300
+	height = 300
 >
 	<world default>
-    	<actor
-        	id = "my-rect"
-            state = ({
-            	position: { x: 20, y: 20 },
-              	size: { width: 50, height: 50 },
-               	color: 'blue'
-            })
+		<actor
+			id = "my-rect"
+			state = ({
+				position: { x: 20, y: 20 },
+				size: { width: 50, height: 50 },
+				color: 'blue'
+			})
 		/>
-    </world>
+	</world>
 </qgml>
 ```
 
@@ -197,11 +197,11 @@ A single `var` tag can be used to declare multiple variables, for example
 ```html
 <var
 	score = 0
-    playerPosition = {
-    	x: 0,
-     	y: 0
-    }
-    playerName = "base name"
+	playerPosition = {
+		x: 0,
+		y: 0
+	}
+	playerName = "base name"
 />
 ```
 
@@ -224,7 +224,7 @@ You can use placeholders inside of it to display the values of variables
 ```html
 <text state = { position: { x: 50, y: 100 } }>
 	hello! your position is ${playerPosition.x} , ${playerPosition.y}
-    and your score is ${score}
+	and your score is ${score}
 </text>
 ```
 
@@ -254,20 +254,20 @@ The state of an actor or group **cannot be altered after compilation**, but you 
 ```html
 <var
 	playerState = {
-    	position: {
-     		x: 0,
+		position: {
+			x: 0,
      		y: 0
-     	},
-     	size: {
-     		width: 20,
-     		height: 60
-     	},
-     	color: 'gray'
-    }
+		},
+		size: {
+			width: 20,
+			height: 60
+		},
+		color: 'gray'
+	}
 />
 <actor
 	id = "player"
-    state = playerState
+	state = playerState
 />
 ```
 
