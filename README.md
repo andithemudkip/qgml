@@ -276,19 +276,19 @@ or
 ```html
 <var
 	playerPosition = {
-    	x: 15,
-     	y: 85
-    }
+		x: 15,
+		y: 85
+	}
 />
 <actor
 	id = "player"
-    state = {
-    	position: playerPosition,
-       	size: {
-       		width: 50,
-       		height: 50
-       	}
-    }
+	state = {
+		position: playerPosition,
+		size: {
+			width: 50,
+			height: 50
+		}
+	}
 />
 ```
 
