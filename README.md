@@ -256,7 +256,7 @@ The state of an actor or group **cannot be altered after compilation**, but you 
 	playerState = {
 		position: {
 			x: 0,
-     		y: 0
+			y: 0
 		},
 		size: {
 			width: 20,
