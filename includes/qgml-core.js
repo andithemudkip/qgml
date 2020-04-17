@@ -60,12 +60,27 @@ class QGML {
                             QGML.gameManager.keymappers [QGML.World.current.id].keys ["down"] [keys [i]] ();
                         }
                 }
+
+                for (let i = 0,
+                    groups = QGML.gameManager.keymappers [QGML.World.current.id].groups ["down"];
+                    i < groups.length; i++) {
+                        groups [i].checkKeysDown (p);
+                }
+
+
+
                 for (let i = 0,
                     keys = Object.keys (QGML.gameManager.keymappers [QGML.World.current.id].keys ["up"]),
                     n = keys.length; i < n; i++) {
                        if (!p.keyIsDown (keys [i])) {
                            QGML.gameManager.keymappers [QGML.World.current.id].keys ["up"] [keys [i]] ();
                        }
+                }
+
+                for (let i = 0,
+                    groups = QGML.gameManager.keymappers [QGML.World.current.id].groups ["up"];
+                    i < groups.length; i++) {
+                        groups [i].checkKeysUp (p);
                 }
 
                 if (QGML.gameManager.scripts [QGML.World.current.id])
@@ -89,10 +104,22 @@ class QGML {
                 if (QGML.gameManager.keymappers [QGML.World.current.id].keys ["pressed"] [p.keyCode]) {
                     QGML.gameManager.keymappers [QGML.World.current.id].keys ["pressed"] [p.keyCode] ();
                 }
+
+                for (let i = 0,
+                    groups = QGML.gameManager.keymappers [QGML.World.current.id].groups ["pressed"];
+                    i < groups.length; i++) {
+                        groups [i].checkKey (String.fromCharCode (p.keyCode).toLowerCase ());
+                }
             }
             p.keyReleased = function () {
                 if (QGML.gameManager.keymappers [QGML.World.current.id].keys ["released"] [p.keyCode]) {
                     QGML.gameManager.keymappers [QGML.World.current.id].keys ["released"] [p.keyCode] ();
+                }
+
+                for (let i = 0,
+                    groups = QGML.gameManager.keymappers [QGML.World.current.id].groups ["released"];
+                    i < groups.length; i++) {
+                        groups [i].checkKey (String.fromCharCode (p.keyCode).toLowerCase ());
                 }
             }
         }
@@ -150,6 +177,13 @@ QGML.Keymapper = class Keymapper {
             released: {}
         }
 
+        this.groups = {
+            down: [],
+            up: [],
+            pressed: [],
+            released: []
+        }
+
         /*
         events:
             down - will fire every frame while the key is held down
@@ -161,8 +195,71 @@ QGML.Keymapper = class Keymapper {
         Object.keys (obj).forEach (key => {
             let opts = key.split ('|');
             let keyCode = QGML.Keymapper.keyCodeFromString (opts [0]);
-            this.keys [opts [1] || 'pressed'] [keyCode] = QGML.ctx.eval (obj [key]);
+            if (keyCode) {
+                this.keys [opts [1] || 'pressed'] [keyCode] = QGML.ctx.eval (obj [key]);
+            } else {
+                let group = QGML.Keymapper.groupFromString (opts [0], obj [key]);
+                console.log (group);
+                if (group)
+                    this.groups [opts [1] || pressed].push (group);
+            }
         });
+
+        console.log (this.groups);
+    }
+
+    static groupFromString (str, toexec) {
+        if (str.startsWith ('[') && str.endsWith (']')) {
+            str = str.slice (1, str.length - 1);
+            let keys = str.split (',');
+            let obj = {
+                keys: {},
+                do: QGML.ctx.eval (toexec),
+                checkKey (key) {
+                    if (key in this.keys) {
+                        this.keys [key] = true;
+                        let shouldExecute = true;
+
+                        for (let k in this.keys) {
+                            if (!this.keys [k]) shouldExecute = false;
+                        }
+
+                        if (shouldExecute) {
+                            this.do ();
+                            for (let k in this.keys) {
+                                this.keys [k] = false;
+                            }
+                        }
+                    } else return false;
+                },
+                checkKeysDown (p) {
+                    let shouldExecute = true;
+                    for (let k in this.keys) {
+                        if (!p.keyIsDown (QGML.Keymapper.keyCodeFromString (k))) {
+                            shouldExecute = false;
+                        }
+                    }
+                    if (shouldExecute) {
+                        this.do ();
+                    }
+                },
+                checkKeysUp (p) {
+                    let shouldExecute = true;
+                    for (let k in this.keys) {
+                        if (p.keyIsDown (QGML.Keymapper.keyCodeFromString (k))) {
+                            shouldExecute = false;
+                        }
+                    }
+                    if (shouldExecute) {
+                        this.do ();
+                    }
+                }
+            }
+            for (let i = 0; i < keys.length; i++) {
+                obj.keys [keys [i]] = false
+            }
+            return obj;
+        } else return null;
     }
 
     static keyCodeFromString (str) {
@@ -236,8 +333,8 @@ QGML.Text = class Text {
             this.value = QGML.ctx.eval ("`" + this.originalValue + "`");
         }
 
-        // p.fill (p.color (this.state.color));
-        // p.text (this.value, pos.x, pos.y);
+        p.fill (p.color (this.state.color));
+        p.text (this.value, pos.x, pos.y);
 
     }
  }

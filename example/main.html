@@ -22,15 +22,14 @@
         <var
             playerWidth = 24
             playerHeight = 24
-            playerPos = ({
+            playerPos = {
                 x: 10,
                 y: 50
-            })
+            }
             shouldRun = false
             name = "andi"
         />
         <group
-            class = "player"
             id = "player"
             state = ({
                 position: playerPos
@@ -50,9 +49,11 @@
                 animator = ({
                     spritesheets: {
                         idle: {
-                            strip: './assets/noBKG_KnightIdle_strip.png',
-                            frames: 15,
-                            frameTime: 5
+                            frames: ['./assets/frames/adventurer-idle-00.png',
+                                    './assets/frames/adventurer-idle-01.png',
+                                    './assets/frames/adventurer-idle-02.png',
+                                    './assets/frames/adventurer-idle-03.png'],
+                            frameTime: 10
                         },
                         run: {
                             strip: './assets/noBKG_KnightRun_strip.png',
@@ -89,115 +90,46 @@
         </script> -->
 
         <text state = ({ position: { x: 10, y: 70 } })>
-            hello there ${name}
             your position is: ${playerPos.x}, ${playerPos.y}
         </text>
 
-
         <keymapper
             w|down = (() => {
-                if (shouldRun) {
-                    playerPos.y -= 5;
-                } else {
-                    playerPos.y -= 3;
-                }
+                playerPos.y -= 3;
+                getActor ('player-body').animator.set ('run');
             })
 
             a|down = (() => {
-                if (shouldRun) {
-                    playerPos.x -= 5;
-                } else {
-                    playerPos.x -= 3;
-                }
+                playerPos.x -= 3;
+                getActor ('player-body').animator.set ('run');
+                getActor ('player-body').direction.set ('horizontal', 'left')
             })
             
             d|down = (() => {
-                if (shouldRun) {
-                    playerPos.x += 5;
-                } else {
-                    playerPos.x += 3;
-                }
+                playerPos.x += 3;
+                getActor ('player-body').animator.set ('run');
+                getActor ('player-body').direction.set ('horizontal', 'right');
             })
             
             s|down = (() => {
-                if (shouldRun) {
-                    playerPos.y += 5;
-                } else {
-                    playerPos.y += 3;
-                }
-            })
-
-            
-
-            a|released = (() => {
-                getActor ('player-body').animator.set ('idle');
-            })
-
-            d|released = (() => {
-                getActor ('player-body').animator.set ('idle');
-            })
-
-            w|released = (() => {
-                getActor ('player-body').animator.set ('idle');
-            })
-
-
-            s|released = (() => {
-                getActor ('player-body').animator.set ('idle');
-            })
-
-
-            a|pressed = (() => {
-                getActor ('player-body').direction.set ('horizontal', 'left')
+                playerPos.y += 3;
                 getActor ('player-body').animator.set ('run');
             })
 
-            d|pressed = (() => {
-                getActor ('player-body').direction.set ('horizontal', 'right');
-                getActor ('player-body').animator.set ('run');
-            })
-            
-            w|pressed = (() => {
-                getActor ('player-body').animator.set ('run');
-            })
-
-            s|pressed = (() => {
-                getActor ('player-body').animator.set ('run');
-            })
-
-
-
-
-            
-
-            shift|pressed = (() => {
-                shouldRun = true;
-                getActor ('player-body').animator.set ('run');
-            })
-
-            shift|released = (() => {
-                shouldRun = false;
+            [w,a,s,d]|up = (() => {
                 getActor ('player-body').animator.set ('idle');
             })
-
         />
     </world>
     <var score2 = 0/>
     <world id = "world-2">
-        <group name = "another-player" class = "player">
+        <group id = "player">
             <actor
                 id = "player-body"
             />
-            <actor
-                id = "sword"
-            />
-            <group name = "nested-again" >
-                <group>
-                    <group>
-
-                    </group>
-                </group>
+            <group id = "nested" >
+                <actor/>
             </group>
-        </group>    
+        </group>
     </world>
 </qgml>
