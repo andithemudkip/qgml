@@ -29,10 +29,22 @@
             shouldRun = false
             name = "andi"
         />
+        <actor
+            id = "follower"
+            state = follower
+            sprite = "./assets/follower.png"
+        />
         <group
             id = "player"
             state = ({
                 position: playerPos
+            })
+            update = (function () {
+                if (this.state.position.x > QGML.width) {
+                    playerPos.x = 0;
+                } else if (this.state.position.x < 0) {
+                    playerPos.x = QGML.width;
+                }
             })
         >
             <actor
@@ -42,32 +54,52 @@
                     size: {
                         width: playerWidth,
                         height: playerHeight
-                    },
-                    color: 'rgba(0,0,0,0)'
+                    }
                 })
-                
+
+                setup = (function () {
+                    this.attack = function () {
+                        this.animator.play ('attack');
+                    }
+                })
+
                 animator = ({
                     spritesheets: {
                         idle: {
-                            frames: ['./assets/frames/adventurer-idle-00.png',
-                                    './assets/frames/adventurer-idle-01.png',
-                                    './assets/frames/adventurer-idle-02.png',
-                                    './assets/frames/adventurer-idle-03.png'],
+                            strip: './assets/noBKG_KnightIdle_strip.png',
+                            frames: 15,
                             frameTime: 10
                         },
                         run: {
                             strip: './assets/noBKG_KnightRun_strip.png',
                             frames: 8,
                             frameTime: 5
+                        },
+                        attack: {
+                            strip: './assets/noBKG_KnightAttack_strip.png',
+                            frames: 22,
+                            frameTime: 5
                         }
                     }
                 })
             />
+            <!-- <group>
+                <actor
+                    state = ({
+                        position: { x: 0, y: 0 },
+                        size: {
+                            width: playerWidth,
+                            height: playerHeight
+                        },
+                        color: 'red'
+                    })
+                />
+            </group> -->
         </group>
 
-        <!-- <var
+        <var
             follower = ({
-                    color: 'green',
+                    color: false,
                     size: {
                         width: 10,
                         height: 10
@@ -77,59 +109,102 @@
                         y: 0
                     }
                 })
-        />
-
-        <actor
-            id = "follower"
-            state = follower
+            player = (getActor ('player-body'))
         />
 
         <script update>
-            follower.position.x += (playerPos.x + playerWidth / 2 - 5 - follower.position.x) / 20;
-            follower.position.y += (playerPos.y + playerWidth / 2 - 5 - follower.position.y) / 20;
-        </script> -->
+            follower.position.x += (playerPos.x - follower.position.x) / 20;
+            follower.position.y += (playerPos.y - follower.position.y) / 20;
 
-        <text state = ({ position: { x: 10, y: 70 } })>
+            // console.log (getGroup ('player'));
+
+            // console.log (getPosition (getActor ('follower')));
+            // console.log (dist (follower.position.x, playerPos.x, follower.position.y, playerPos.y));
+        </script>
+
+        <text state = ({
+            position: { x: 10, y: 70 },
+            size: 14,
+            color: 'white'
+        })
+            font = "Consolas"
+        >
             your position is: ${playerPos.x}, ${playerPos.y}
         </text>
 
         <keymapper
             w|down = (() => {
-                playerPos.y -= 3;
-                getActor ('player-body').animator.set ('run');
+                if (player.animator.selectedSheet != 'attack') {
+                    getActor ('player-body').animator.set ('run');
+                    playerPos.y -= 3;
+                }
             })
 
             a|down = (() => {
-                playerPos.x -= 3;
-                getActor ('player-body').animator.set ('run');
+                if (player.animator.selectedSheet != 'attack') {
+                    getActor ('player-body').animator.set ('run');
+                    playerPos.x -= 3;
+
+                }
                 getActor ('player-body').direction.set ('horizontal', 'left')
             })
             
             d|down = (() => {
-                playerPos.x += 3;
-                getActor ('player-body').animator.set ('run');
+                if (player.animator.selectedSheet != 'attack') {
+                    getActor ('player-body').animator.set ('run');
+                    playerPos.x += 3;
+
+                }
                 getActor ('player-body').direction.set ('horizontal', 'right');
             })
             
             s|down = (() => {
-                playerPos.y += 3;
-                getActor ('player-body').animator.set ('run');
+                if (player.animator.selectedSheet != 'attack') {
+                    getActor ('player-body').animator.set ('run');
+                    playerPos.y += 3;
+                }
             })
 
             [w,a,s,d]|up = (() => {
-                getActor ('player-body').animator.set ('idle');
+                if (player.animator.selectedSheet != 'attack') {
+                    getActor ('player-body').animator.set ('idle');
+                }
+            })
+
+            e|pressed = (() => {
+                getActor ('player-body').attack ();
+            })
+
+            q|pressed = (() => {
+                getActor ('player-body').scale.set ({ x: 2, y: 2 });
             })
         />
     </world>
     <var score2 = 0/>
     <world id = "world-2">
-        <group id = "player">
-            <actor
-                id = "player-body"
-            />
-            <group id = "nested" >
-                <actor/>
-            </group>
-        </group>
+        <actor
+            id = "player"
+            state = ({
+                position: { x: 0, y: 0 },
+                size: {
+                    width: 20,
+                    height: 20
+                }
+            })
+            animator = ({
+                spritesheets: {
+                    idle: {
+                        strip: './assets/noBKG_KnightIdle_strip.png',
+                        frames: 15,
+                        frameTime: 10
+                    },
+                    run: {
+                        strip: './assets/noBKG_KnightRun_strip.png',
+                        frames: 8,
+                        frameTime: 5
+                    }
+                }
+            })
+        />
     </world>
 </qgml>

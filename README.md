@@ -121,6 +121,8 @@ An actor is anything that appears on the screen: the player, the ground, an obje
 | state    | object    | a state object                                               |
 | sprite   | string    | the path relative to the qgml file to an image file          |
 | animator | object    | an animator object                                           |
+| setup    | function  | a function that is called once when the world is loaded      |
+| update   | function  | a function that is called every frame                        |
 
 #### Animator
 
@@ -154,6 +156,14 @@ spritesheets: {
 
 `strip` - the path to an animation strip
 
+**[!] Note about `setup` and `update`**
+
+If the function you pass to `setup` or `update` uses classic notation (`function () { ... }`), the context within it (`this`) will be the actor itself; so, you will be able to write `this.state.position` which will return the actor's position, or `this.animator` which will return the actor's animator.
+
+If the function you pass uses arrow notation (`() => { ... }`), the context (`this`) will be the QGML context.
+
+**TLDR: it is recommended that you use classic notation for functions passed to `setup` and `update`**
+
 
 
 ### Group
@@ -162,14 +172,16 @@ spritesheets: {
 <group>{children}</group>
 ```
 
-Groups can be used to group together multiple Actors or Groups.
+Groups can be used to group together multiple Actors or Groups so that they can move all at once.
 
 #### Props
 
-| prop  | data type | description                                                  |
-| ----- | --------- | ------------------------------------------------------------ |
-| id    | string    | just like the id of an actor, this can be used to access this group in a script |
-| state | object    | a state object                                               |
+| prop   | data type | description                                                  |
+| ------ | --------- | ------------------------------------------------------------ |
+| id     | string    | just like the id of an actor, this can be used to access this group in a script |
+| state  | object    | a state object                                               |
+| setup  | function  | a function that is called once when the world is loaded      |
+| update | function  | a function that is called every frame                        |
 
 Modifying a group's position will move all of its children accordingly
 
@@ -181,6 +193,14 @@ Modifying a group's position will move all of its children accordingly
 	</group>
 </group>
 ```
+
+**[!] Note about `setup` and `update`**
+
+If the function you pass to `setup` or `update` uses classic notation (`function () { ... }`), the context within it (`this`) will be the group itself; so, you will be able to write `this.state.position` which will return the group's position.
+
+If the function you pass uses arrow notation (`() => { ... }`), the context (`this`) will be the QGML context.
+
+**TLDR: it is recommended that you use classic notation for functions passed to `setup` and `update`**
 
 
 
@@ -215,9 +235,10 @@ A single `var` tag can be used to declare multiple variables, for example
 
 It is used to display text on the canvas
 
-| prop  | data type | description                                     |
-| ----- | --------- | ----------------------------------------------- |
-| state | object    | a state object (it ignores the `size` property) |
+| prop  | data type | description                                                  |
+| ----- | --------- | ------------------------------------------------------------ |
+| state | object    | a state object                                               |
+| font  | string    | the name of a web-safe font or the name of a font that you're already loading on your web page |
 
 You can use placeholders inside of it to display the values of variables
 
@@ -232,11 +253,15 @@ You can use placeholders inside of it to display the values of variables
 
 ### State Objects
 
-| property | data type                                | description                                        |
-| -------- | ---------------------------------------- | -------------------------------------------------- |
-| position | object { x : Number, y : Number}         | the initial x and y of the actor, group, or text   |
-| size     | object { width: Number, height: Number } | the initial width and height of the actor or group |
-| color    | string                                   | the color of the actor, group, or text             |
+| property | data type                                | description            | applies to         |
+| -------- | ---------------------------------------- | ---------------------- | ------------------ |
+| position | Object { x : Number, y : Number}         | the initial position   | actor, group, text |
+| size     | Object { width: Number, height: Number } | the initial actor size | actor              |
+| size     | Number                                   | the font size          | text               |
+| color    | String                                   | the fill color         | actor, text        |
+| stroke   | Object { weight: Number, color: String } | the stroke / outline   | actor, text        |
+| style    | String                                   | the style of the text  | text               |
+| align    | String                                   | the text alignment     | text               |
 
 #### color
 
@@ -244,8 +269,22 @@ any of the following formats are okay:
 
 * `"rgb(255, 125, 60)"`
 * `"rgba(0, 25, 125, 0.5)"`
-* `"rgba(0,0,0,0)"` **(use this to make it transparent)**
-* `"red"`, `"blue"`, `"lightblue"`, etc
+* `"rgba(0,0,0,0)"`
+* `"red"`, `"blue"`, `"lightblue"`, etc.
+* if color is omitted or set to `false` the rectangle will be transparent
+
+#### style
+
+* `"normal"`
+* `"bold"`
+* `"italic"`
+* `"bolditalic"`
+
+#### align
+
+* `"right"`
+* `"center"`
+* `"left"`
 
 #### Modifying the state in script
 
@@ -294,19 +333,138 @@ or
 
 
 
-### Keymapper [docs work in progress]
+### Keymapper
+
+```html
+<keymapper/>
+```
+
+The keymapper is used to bind functions to certain keyboard events. Keymappers are specific to the world they are declared inside.
+
+Each prop has the following structure:
+`<key or group of keys>|<event> = (<function>)`
+
+**key**:
+
+* literal value of the key (w, a, s, d, etc)
+* keycode of the key (32, 87, etc)
+* one of the following special keys: `backspace`, `delete`, `enter`, `return`, `tab`, `escape`, `shift`, `control`, `option`, `alt`, `up_arrow`, `down_arrow`, `left_arrow`, `right_arrow`, `space`
+
+**group of keys**
+
+it's represented as `[<key>,<key>,<key>,...]` 
+
+**event - for keys**
+
+* `down` - will fire every frame while the key is held down
+
+* `up` - will fire every frame while the key is not held down
+
+* `pressed` - will fire once when the key is pressed [DEFAULT]
+
+* `released` - will fire once when the key is released
+
+**event - for groups of keys**
+
+* `down` - will fire every frame while **all the keys** are held down
+
+* `up` - will fire every frame while **none of the keys** are held down
+
+* `pressed` - will fire once after each key has been pressed at least once
+
+* `released` - will fire once after every key has been released
+
+example:
 
 ```html
 <keymapper
- 	a|down = (() => {
-	
-   	})
+	a|down = (() => {
+		console.log ('this will fire every frame while the A key is down');
+	})
     
-   	[q,e]|up = (() => {
-	   	 
-   	})
+	space|pressed = (() => {
+		console.log ('this will fire every time space is pressed');
+	})
+    
+	16|released = (() => {
+		console.log ('16 is the keycode for shift so this will fire everytime shift is released');
+	})
+    
+	[q,e]|up = (() => {
+		console.log ('this will fire every frame while Q and E are both up');
+	})
 />
 ```
 
 
 
+### Script
+
+```html
+<script></script>
+```
+
+Scripts are used to add JavaScript code that is executed either in `setup` (once, when the world is loaded) or in `update` (every frame)
+
+Scripts are specific to the world they are declared in.
+
+```html
+<script setup>
+	console.log ('this is executed once when the world is loaded');
+</script>
+```
+
+```html
+<script update>
+	console.log ('this is executed every frame');
+</script>
+```
+
+
+
+## API
+
+### Actors
+
+`getActor (id: String)` - returns the actor with the specified ID
+
+`<Actor>.state` - returns the state of the actor - **this is read-only, the state is not meant to be modified**
+
+`<Actor>.direction` - returns the direction that actor is facing on both axis
+
+`getPosition (actor: Actor)` - returns a `{ x: Number, y: Number }` object of the actor's position
+
+`<Actor>.direction.set (axis: String, value: String || Number)`
+
+* **axis** can be either `'horizontal'` or `'vertical'`
+* **value** can be:
+  * `'left'` or `-1 ` - for `axis  == 'horizontal'`
+  * `'right'` or `1` - for `axis  == 'horizontal'`
+  * `'up'` or `1` - for `axis  == 'vertical'`
+  * `'down'` or `-1` - for `axis  == 'vertical'`
+
+`<Actor>.flip.horizontal ()` - flips the direction horizontally
+
+`<Actor>.flip.vertical ()` - flips the direction vertically
+
+`<Actor>.animator` - returns the animator of an actor
+
+### Animator
+
+`<Animator>.set (animation: String)` - sets the animator's animation to the specified one (ex: 'idle', 'run' - depending on how you declared the animator)
+
+### Group
+
+`getGroup (id: String)` - returns the group with the specified ID
+
+`<Group>.state` - returns the state of the group - **this is read-only, the state is not meant to be modified**
+
+`getPosition (group: Group)` - returns a `{ x: Number, y: Number }` object of the group's position
+
+### Entity
+
+Entity = either Actor or Group
+
+`dist (x1: Number, y1: Number, x2: Number, y2:  Number)` - returns the distance between the points `(x1, y1)` and `(x2, y2)`
+
+`dist (e1: Entity, e2: Entity)` - returns the distance between the two entities' positions

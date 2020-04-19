@@ -4,10 +4,39 @@ class QGML {
         this.gameManager = null;
     }
     static setup (config) {
+        this.width = config.width;
+        this.height = config.height;
         this.gameManager = new this.GameManager (config);
         this.gameManager.createWorlds ();
         this.ctx = new QGML.Context ();
         this.gameManager.createKeymappers ();
+        
+
+        this.preload = function (p) {
+            for (let i = 0, texts = QGML.World.current.texts; i < texts.length; i++) {
+                texts [i].preload (p);
+            }
+        }
+
+        this.setup = function (p) {
+            QGML.ctx.setVar ('p5', p);
+
+            p.background (50);
+            p.fill (255);
+            p.frameRate (60); //idk why it doesn't work
+
+            for (let i = 0, actors = QGML.World.current.actors; i < actors.length; i++) {
+                actors [i].setup (p);
+            }
+
+            for (let i = 0, groups = QGML.World.current.groups; i < groups.length; i++) {
+                groups [i].setup (p);
+            }
+
+            if (QGML.gameManager.scripts [QGML.World.current.id])
+                QGML.ctx.eval (QGML.gameManager.scripts [QGML.World.current.id] ['setup']);
+        }
+
         this.p5 = new p5 (QGML.createSketch (config), config.rootElementID);
     }
 
@@ -21,26 +50,25 @@ class QGML {
                         assets.spritesheets [i].frames [j] = p.loadImage (sheets [i].frames [j]);
                     }
                 }
+
+                for (let i = 0, sprites = assets.sprites; i < sprites.length; i++) {
+                    assets.sprites [i].image = p.loadImage (sprites [i].image);
+                }
+
                 QGML.gameManager.assets = assets;
+
+                QGML.preload (p);
             }
             p.setup = function () {
                 let canvas = p.createCanvas (width, height);
-                QGML.ctx.setVar ('p5', p);
-
-                p.background (0);
-                p.fill (255);
-                p.frameRate (60); //idk why it doesn't work
-
-
-                if (QGML.gameManager.scripts [QGML.World.current.id])
-                    QGML.ctx.eval (QGML.gameManager.scripts [QGML.World.current.id] ['setup']);
+                QGML.setup (p);
             }
             p.draw = function () {
                 if (QGML.debug && p.frameCount % 60 === 0) {
                     performance.mark ('start-of-draw');
                 }
                 
-                p.background (0);
+                p.background (50);
                 for (let i = 0, n = QGML.gameManager.currentGroups.length; i < n; i++) {
                     QGML.gameManager.currentGroups [i].update ();
                 }
@@ -52,35 +80,35 @@ class QGML {
                 for (let i = 0, n = QGML.gameManager.currentTexts.length; i < n; i++) {
                     QGML.gameManager.currentTexts [i].draw (p);
                 }
+                if (QGML.gameManager.keymappers [QGML.World.current.id]) {
+                    for (let i = 0,
+                        keys = Object.keys (QGML.gameManager.keymappers [QGML.World.current.id].keys ["down"]),
+                        n = keys.length; i < n; i++) {
+                           if (p.keyIsDown (keys [i])) {
+                               QGML.gameManager.keymappers [QGML.World.current.id].keys ["down"] [keys [i]] ();
+                           }
+                   }
+   
+                   for (let i = 0,
+                       groups = QGML.gameManager.keymappers [QGML.World.current.id].groups ["down"];
+                       i < groups.length; i++) {
+                           groups [i].checkKeysDown (p);
+                   }
 
-                for (let i = 0,
-                     keys = Object.keys (QGML.gameManager.keymappers [QGML.World.current.id].keys ["down"]),
-                     n = keys.length; i < n; i++) {
-                        if (p.keyIsDown (keys [i])) {
-                            QGML.gameManager.keymappers [QGML.World.current.id].keys ["down"] [keys [i]] ();
-                        }
-                }
-
-                for (let i = 0,
-                    groups = QGML.gameManager.keymappers [QGML.World.current.id].groups ["down"];
-                    i < groups.length; i++) {
-                        groups [i].checkKeysDown (p);
-                }
-
-
-
-                for (let i = 0,
+                   for (let i = 0,
                     keys = Object.keys (QGML.gameManager.keymappers [QGML.World.current.id].keys ["up"]),
-                    n = keys.length; i < n; i++) {
-                       if (!p.keyIsDown (keys [i])) {
-                           QGML.gameManager.keymappers [QGML.World.current.id].keys ["up"] [keys [i]] ();
-                       }
-                }
+                        n = keys.length; i < n; i++) {
+                        if (!p.keyIsDown (keys [i])) {
+                            QGML.gameManager.keymappers [QGML.World.current.id].keys ["up"] [keys [i]] ();
+                        }
+                    }
 
-                for (let i = 0,
-                    groups = QGML.gameManager.keymappers [QGML.World.current.id].groups ["up"];
-                    i < groups.length; i++) {
-                        groups [i].checkKeysUp (p);
+                    for (let i = 0,
+                        groups = QGML.gameManager.keymappers [QGML.World.current.id].groups ["up"];
+                        i < groups.length; i++) {
+                            groups [i].checkKeysUp (p);
+                    }
+   
                 }
 
                 if (QGML.gameManager.scripts [QGML.World.current.id])
@@ -101,25 +129,30 @@ class QGML {
                 }
             }
             p.keyPressed = function () {
-                if (QGML.gameManager.keymappers [QGML.World.current.id].keys ["pressed"] [p.keyCode]) {
-                    QGML.gameManager.keymappers [QGML.World.current.id].keys ["pressed"] [p.keyCode] ();
+                if (QGML.gameManager.keymappers [QGML.World.current.id]) {
+                    if (QGML.gameManager.keymappers [QGML.World.current.id].keys ["pressed"] [p.keyCode]) {
+                        QGML.gameManager.keymappers [QGML.World.current.id].keys ["pressed"] [p.keyCode] ();
+                    }
+    
+                    for (let i = 0,
+                        groups = QGML.gameManager.keymappers [QGML.World.current.id].groups ["pressed"];
+                        i < groups.length; i++) {
+                            groups [i].checkKey (String.fromCharCode (p.keyCode).toLowerCase ());
+                    }
                 }
-
-                for (let i = 0,
-                    groups = QGML.gameManager.keymappers [QGML.World.current.id].groups ["pressed"];
-                    i < groups.length; i++) {
-                        groups [i].checkKey (String.fromCharCode (p.keyCode).toLowerCase ());
-                }
+                
             }
             p.keyReleased = function () {
-                if (QGML.gameManager.keymappers [QGML.World.current.id].keys ["released"] [p.keyCode]) {
-                    QGML.gameManager.keymappers [QGML.World.current.id].keys ["released"] [p.keyCode] ();
-                }
-
-                for (let i = 0,
-                    groups = QGML.gameManager.keymappers [QGML.World.current.id].groups ["released"];
-                    i < groups.length; i++) {
-                        groups [i].checkKey (String.fromCharCode (p.keyCode).toLowerCase ());
+                if (QGML.gameManager.keymappers [QGML.World.current.id]) {
+                    if (QGML.gameManager.keymappers [QGML.World.current.id].keys ["released"] [p.keyCode]) {
+                        QGML.gameManager.keymappers [QGML.World.current.id].keys ["released"] [p.keyCode] ();
+                    }
+    
+                    for (let i = 0,
+                        groups = QGML.gameManager.keymappers [QGML.World.current.id].groups ["released"];
+                        i < groups.length; i++) {
+                            groups [i].checkKey (String.fromCharCode (p.keyCode).toLowerCase ());
+                    }
                 }
             }
         }
@@ -147,19 +180,45 @@ QGML.Context = function () {
 
     /* user call-able functions here */
 
+    function loadWorld (str) {
+        QGML.gameManager.loadWorld (str);
+    }
+
+    function getPosition (entity) {
+        return entity.state.position;
+    }
+
+    function dist (x1, y1, x2, y2) {
+        if ((x1 instanceof QGML.Actor || x1 instanceof QGML.Group) && (y1 instanceof QGML.Actor || y1 instanceof QGML.Group)) {
+            return Math.hypot (getPosition (x1).x - getPosition (y1).x, getPosition (x1).y - getPosition (y1).y);
+        } else return Math.hypot (x2 - x1, y2 - y1)
+    }
+
     function getActor (id) {
         return QGML.World.current.actors.find (a => a.id === id);
     }
 
-    this.eval = function (str) {
-        let res = eval (str)
-        for (key of keys) {
-            if (key in QGML.gameManager.vars [QGML.World.current.id]) {
-                QGML.gameManager.setVar (QGML.World.current.id, key, eval (key));
-            } else {
-                QGML.gameManager.setVar ('global', key, eval (key));
+    function getGroup (id) {
+        return QGML.World.current.groups.find (g => g.name === id);
+    }
+
+    this.eval = function (str, context) {
+        let res;
+        if (context) {
+            res = eval (str).bind (context);
+        } else {
+            res = eval (str);
+        }
+        if (QGML.gameManager.vars [QGML.World.current.id]) {
+            for (key of keys) {
+                if (key in QGML.gameManager.vars [QGML.World.current.id]) {
+                    QGML.gameManager.setVar (QGML.World.current.id, key, eval (key));
+                } else {
+                    QGML.gameManager.setVar ('global', key, eval (key));
+                }
             }
         }
+        
         return res;
     }
 
@@ -199,13 +258,10 @@ QGML.Keymapper = class Keymapper {
                 this.keys [opts [1] || 'pressed'] [keyCode] = QGML.ctx.eval (obj [key]);
             } else {
                 let group = QGML.Keymapper.groupFromString (opts [0], obj [key]);
-                console.log (group);
                 if (group)
                     this.groups [opts [1] || pressed].push (group);
             }
         });
-
-        console.log (this.groups);
     }
 
     static groupFromString (str, toexec) {
@@ -300,7 +356,7 @@ QGML.Keymapper.keyTable = {
 }
 
 QGML.Text = class Text {
-    constructor ({ group = null, state = "", value = "", id = 'default-text' }, worldObj) {
+    constructor ({ group = null, state = "", value = "", id = 'default-text', font = {} }, worldObj) {
         this.id = id;
         this.group = worldObj.groups.find (grp => grp.name === group);
         this.state = {
@@ -308,16 +364,31 @@ QGML.Text = class Text {
                 x: 0,
                 y: 0
             },
-            color: 255,
-            stroke: false
+            color: null,
+            stroke: null
         }
         this.value = value;
         this.originalValue = value;
         this.originalState = state;
+        this.font = font;
+    }
+
+    preload (p) {
+        if (this.font.type === 'file') {
+            this.font = p.loadFont (this.font.base64);
+        } else if (this.font.type === 'web') {
+            this.font = this.font.name;
+        } else {
+            this.font = null;
+        }
+    }
+
+    setup (p) {
+
     }
 
     draw (p) {
-
+        p.push ();
         let pos = {
             x: this.state.position.x,
             y: this.state.position.y
@@ -329,21 +400,36 @@ QGML.Text = class Text {
 
         if (this.originalState) {
             this.state = QGML.ctx.eval (this.originalState);
-            if (!this.state.color) this.state.color = 255;
             this.value = QGML.ctx.eval ("`" + this.originalValue + "`");
+            if (this.state.stroke) {
+                p.stroke (p.color (this.state.stroke.color));
+                p.strokeWeight (this.state.stroke.weight);
+            } else {
+                p.noStroke ();
+            }
+            if (this.state.color) {
+                p.fill (p.color (this.state.color));
+            } else {
+                p.noFill ();
+            }
+            p.textSize (this.state.size);
+            p.textStyle (this.state.style);
+            p.textAlign (this.state.align);
+            if (this.font) {
+                p.textFont (this.font);
+            }
         }
 
-        p.fill (p.color (this.state.color));
         p.text (this.value, pos.x, pos.y);
-
+        p.pop ();
     }
  }
 
 QGML.Actor = class Actor {
-    constructor ({ group = null, state = "", id = 'default-actor', sprite, animator }, worldObj) {
+    constructor ({ group = null, state = "", id = 'default-actor', sprite, animator, customUpdate, customSetup }, worldObj) {
         this.id = id;
         this.sprite = sprite;
-        this.animator = QGML.Animator.Create (animator);
+        this.animator = animator;
 
         this.group = worldObj.groups.find (grp => grp.name === group);
         this.state = {
@@ -355,14 +441,17 @@ QGML.Actor = class Actor {
                 width: 0,
                 height: 0
             },
-            color: 255
+            color: null,
+            stroke: null
         };
         this.originalState = state;
 
-
         this.scale = {
             x: 1,
-            y: 1
+            y: 1,
+            set (obj) {
+                Object.assign (this, obj);
+            }
         }
 
         this.direction = {
@@ -387,29 +476,62 @@ QGML.Actor = class Actor {
                 this.direction.y = - this.direction.y;
             }
         }
+
+        this.customUpdate = customUpdate;
+        this.customSetup = customSetup;
     }
+
+    setup (p) {
+        this.sprite = QGML.Sprite.Create (this.sprite);
+        this.animator = QGML.Animator.Create (this.animator);
+        if (this.customSetup) {
+            QGML.ctx.eval (this.customSetup, this) ();
+        }
+        if (this.customUpdate) {
+            this.customUpdate = QGML.ctx.eval (this.customUpdate, this);
+        }
+    }
+
     draw (p) {
         if (this.state.size.width && this.state.size.height) {
             p.push ();
-            let pos = {
-                x: this.state.position.x,
-                y: this.state.position.y
-            }
+            let pos = this.state.position;
+
+            let scale = this.scale;
+
             if (this.group) {
                 pos.x += this.group.absolutePosition.x;
                 pos.y += this.group.absolutePosition.y;
             }
-            p.fill (p.color (this.state.color));
-            
-            p.rect (pos.x, pos.y, this.state.size.width, this.state.size.height);
 
+            if (this.state.stroke) {
+                p.strokeWeight (this.state.stroke.weight);
+                p.stroke (p.color (this.state.stroke.color));
+            } else {
+                p.noStroke ();
+            }
+
+            if (this.state.color) {
+                p.fill (p.color (this.state.color));
+            } else {
+                p.noFill ();
+            }
+            p.rect (pos.x, pos.y, this.state.size.width, this.state.size.height);
+            
+            
             if (this.animator) {
                 p.imageMode (p.CENTER);
                 p.translate (pos.x + this.state.size.width / 2, pos.y + this.state.size.height / 2);
-                p.scale (this.scale.x * this.direction.x, this.scale.y * this.direction.y);
+                p.scale (scale.x * this.direction.x, scale.y * this.direction.y);
                 p.image (this.animator.getFrame (), 0, 0);
+            } else if (this.sprite) {
+                p.imageMode (p.CENTER);
+                p.translate (pos.x + this.state.size.width / 2, pos.y + this.state.size.height / 2);
+                p.scale (scale.x * this.direction.x, scale.y * this.direction.y);
+                p.image (this.sprite.get (), 0, 0);
             }
             p.pop ();
+
         }
 
         // update the state
@@ -417,6 +539,8 @@ QGML.Actor = class Actor {
             this.state = QGML.ctx.eval (this.originalState);
         }
         if (this.animator) this.animator.update ();
+
+        if (this.customUpdate) this.customUpdate ();
     }
 }
 
@@ -429,7 +553,6 @@ QGML.Animator = class Animator {
                 this.selectedSheet = keys [i];
                 this.currentFrames = QGML.gameManager.findAsset ('spritesheets', this.spritesheets [keys [i]].name).frames;
                 this.frameTime = QGML.gameManager.findAsset ('spritesheets', this.spritesheets [keys [i]].name).frameTime || 1;
-                
             }
         }
         if (!this.selectedSheet) {
@@ -441,6 +564,9 @@ QGML.Animator = class Animator {
 
         this.currentFrame = 0;
         this.count = 0;
+        this.lastAnimation = this.selectedSheet;
+        this.shouldLoop = true;
+
     }
 
     update () {
@@ -455,12 +581,30 @@ QGML.Animator = class Animator {
         if (this.currentFrame + 1 < this.currentFrames.length) {
             this.currentFrame ++;
         } else {
-            this.currentFrame = 0;
+            if (this.shouldLoop) {
+                this.currentFrame = 0;
+            } else {
+                this.set (this.lastAnimation);
+            }
         }
     }
 
     getFrame () {
         return this.currentFrames [this.currentFrame];
+    }
+
+    play (name) {
+        console.log (name);
+        for (let i = 0, keys = Object.keys (this.spritesheets); i < keys.length; i++) {
+            if (keys [i] === name) {
+                this.selectedSheet = keys [i];
+                this.currentFrames = QGML.gameManager.findAsset ('spritesheets', this.spritesheets [keys [i]].name).frames;
+                this.frameTime = QGML.gameManager.findAsset ('spritesheets', this.spritesheets [keys [i]].name).frameTime || 1;
+                this.currentFrame = 0;
+                this.count = 0;
+                this.shouldLoop = false;
+            }
+        }
     }
 
     set (name) {
@@ -472,6 +616,8 @@ QGML.Animator = class Animator {
                     this.frameTime = QGML.gameManager.findAsset ('spritesheets', this.spritesheets [keys [i]].name).frameTime || 1;
                     this.currentFrame = 0;
                     this.count = 0;
+                    this.lastAnimation = this.selectedSheet;
+                    this.shouldLoop = true;
                 }
             }
         }
@@ -484,8 +630,29 @@ QGML.Animator = class Animator {
     }
 }
 
+QGML.Sprite = class Sprite {
+    constructor ({ name }) {
+        this.name = name;
+        this.image = QGML.gameManager.findAsset ('sprites', this.name).image;
+    }
+
+    get () {
+        return this.image;
+    }
+
+    set () {
+        console.log ('not yet implemented');
+    }
+
+    static Create (sprite) {
+        if (sprite && sprite.name) {
+            return new QGML.Sprite (sprite);
+        } else return null;
+    }
+}
+
 QGML.Group = class Group {
-    constructor ({ parent = null, world = 'default-world', name = 'default-group', state = {} }, worldObj) {
+    constructor ({ parent = null, world = 'default-world', name = 'default-group', state = {}, customUpdate = null, customSetup = null }, worldObj) {
         this.parent = parent;
         this.world = world;
         this.name = name;
@@ -505,13 +672,24 @@ QGML.Group = class Group {
             x: 0,
             y: 0
         }
+
+        this.customUpdate = customUpdate;
+        this.customSetup = customSetup;
+
+    }
+
+    setup (p) {
+        if (this.customSetup) {
+            QGML.ctx.eval (this.customSetup, this) ();
+        }
+        if (this.customUpdate) {
+            this.customUpdate = QGML.ctx.eval (this.customUpdate, this);
+        }
+
+        this.parentObject = QGML.World.current.groups.find (g => g.name === this.parent);
     }
 
     update () {
-        if (!this.parentObject) {
-            this.parentObject = QGML.World.current.groups.find (g => g.name === this.parent);
-        }
-
         if (this.originalState) {
             this.state = QGML.ctx.eval (this.originalState);
             this.absolutePosition = this.state.position;
@@ -522,6 +700,10 @@ QGML.Group = class Group {
                 x: this.parentObject.state.position.x + this.state.position.x,
                 y: this.parentObject.state.position.y + this.state.position.y
             }
+        }
+
+        if (this.customUpdate) {
+            this.customUpdate ();
         }
     }
 }
@@ -587,6 +769,14 @@ QGML.GameManager = class GameManager {
         this.currentActors = this.selectedWorld.actors;
         this.currentTexts = this.selectedWorld.texts;
         QGML.World.current = this.selectedWorld;
+        if (QGML.ctx) {
+            let p5 = QGML.ctx.p5;
+            QGML.preload (p5);
+            QGML.setup (p5);
+            QGML.ctx = new QGML.Context ();
+            QGML.ctx.setVar ('p5', p5);
+        }
+        
     }
 
     findWorld (id) {
