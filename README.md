@@ -123,6 +123,7 @@ An actor is anything that appears on the screen: the player, the ground, an obje
 | animator | object    | an animator object                                           |
 | setup    | function  | a function that is called once when the world is loaded      |
 | update   | function  | a function that is called every frame                        |
+| class    | string    | the class of the actor                                       |
 
 #### Animator
 
@@ -150,11 +151,35 @@ spritesheets: {
 }
 ```
 
-`frames` - an array containing the **relative** paths to frames (images) or the number of frames in a strip
+`frames` - an array containing the **relative** paths to frames (images) **or** the number of frames in a strip
 
 `frameTime` - the number of game ticks (frames) each animation frame should stay on screen [1 - change each frame (fastest), 10 - change every 10 frames, etc]
 
 `strip` - the path to an animation strip
+
+example of an animation strip ([credit](https://oco.itch.io/medieval-fantasy-character-pack)):
+
+![](https://raw.githubusercontent.com/andithemudkip/game-ml/master/example/assets/noBKG_KnightIdle_strip.png)
+
+##### Example
+
+```html
+<actor
+	id = "player"
+	state = ({...})
+	animator = ({
+		spritesheets: {
+			idle: {
+				strip: './assets/noBKG_KnightIdle_strip.png',
+				frames: 15,
+				frameTime: 10
+			}
+		}
+	})
+/>
+```
+
+
 
 **[!] Note about `setup` and `update`**
 
@@ -163,6 +188,26 @@ If the function you pass to `setup` or `update` uses classic notation (`function
 If the function you pass uses arrow notation (`() => { ... }`), the context (`this`) will be the QGML context.
 
 **TLDR: it is recommended that you use classic notation for functions passed to `setup` and `update`**
+
+example:
+
+```html
+<actor
+	update = (function () {
+		console.log (this.state); // will log the actor's state
+	})
+/>
+```
+
+while
+
+```html
+<actor
+	update = (() => {
+		console.log (this.state); // undefined
+	})
+/>
+```
 
 
 
@@ -194,13 +239,7 @@ Modifying a group's position will move all of its children accordingly
 </group>
 ```
 
-**[!] Note about `setup` and `update`**
-
-If the function you pass to `setup` or `update` uses classic notation (`function () { ... }`), the context within it (`this`) will be the group itself; so, you will be able to write `this.state.position` which will return the group's position.
-
-If the function you pass uses arrow notation (`() => { ... }`), the context (`this`) will be the QGML context.
-
-**TLDR: it is recommended that you use classic notation for functions passed to `setup` and `update`**
+**[!] Note about `setup` and `update` - everything said about <actor/> applies**
 
 
 
@@ -286,7 +325,7 @@ any of the following formats are okay:
 * `"center"`
 * `"left"`
 
-#### Modifying the state in script
+#### Modifying the state in script [THIS MAY NOT BE TRUE ANYMORE]
 
 The state of an actor or group **cannot be altered after compilation**, but you can use **variables** instead of literal values for any of the properties, or for the whole state object
 
@@ -422,17 +461,57 @@ Scripts are specific to the world they are declared in.
 
 
 
+### Actor-Template
+
+```html
+<actor-template/>
+```
+
+Templates are used to spawn actors of the same type programmatically (from scripts and such).
+
+An example of an actor template would be:
+
+```html
+<actor-template
+	id = "zombie"
+	sprite = "./assets/zombie.png"
+	update = (function () {
+		// zombie behaviour            
+	})
+/>
+```
+
+Which you can then instantiate inside `<script>` tags or inside other actors' `setup` and `update`
+
+```js
+spawn ('zombie', {
+	position: {
+		x: 10,
+		y: 20
+	}, size: {
+		width: 40,
+		height: 70
+	}
+});
+```
+
+You can check out the `spawn` function in the API section below.
+
+
+
 ## API
 
 ### Actors
 
 `getActor (id: String)` - returns the actor with the specified ID
 
+`getActorsByClass (class: String)` - returns an array of actors with the specified class
+
 `<Actor>.state` - returns the state of the actor - **this is read-only, the state is not meant to be modified**
 
 `<Actor>.direction` - returns the direction that actor is facing on both axis
 
-`getPosition (actor: Actor)` - returns a `{ x: Number, y: Number }` object of the actor's position
+`<Actor>.getPosition ()` - returns the actor's position
 
 `<Actor>.direction.set (axis: String, value: String || Number)`
 
@@ -449,9 +528,15 @@ Scripts are specific to the world they are declared in.
 
 `<Actor>.animator` - returns the animator of an actor
 
+`overlaps (a1: Actor, a2: Actor)` - returns true if the actors overlap
+
+`spawn (actorTemplateID: String, initialState: stateObject)` - spawns a new actor from a specified actor-template, assigns its state to the initial state object, and assigns its `class` to the template id; it returns the new actor, or `null` if the specified template id does not exist.
+
 ### Animator
 
 `<Animator>.set (animation: String)` - sets the animator's animation to the specified one (ex: 'idle', 'run' - depending on how you declared the animator)
+
+`<Animator>.play (animation: String[, onAnimationDone: Function])` - plays the specified animation **once**, then calls the callback function if one is passed
 
 ### Group
 
@@ -459,7 +544,7 @@ Scripts are specific to the world they are declared in.
 
 `<Group>.state` - returns the state of the group - **this is read-only, the state is not meant to be modified**
 
-`getPosition (group: Group)` - returns a `{ x: Number, y: Number }` object of the group's position
+`<Group>.getPosition ()` - returns the position of the group
 
 ### Entity
 
@@ -468,3 +553,5 @@ Entity = either Actor or Group
 `dist (x1: Number, y1: Number, x2: Number, y2:  Number)` - returns the distance between the points `(x1, y1)` and `(x2, y2)`
 
 `dist (e1: Entity, e2: Entity)` - returns the distance between the two entities' positions
+
+`getPosition (e: Entity)` - returns the entity's position

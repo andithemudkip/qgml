@@ -22,28 +22,24 @@
             setup = (function () {
                 console.log ('square was set up');
             })
+            update = (function () {
+                this.state.position.x = playerPos.x + 50;
+            })
         />
 
         <script setup>
             // spawn (template_id, initial_state)
-            for (let i = 0; i < 10; i++) {
-                spawn ('square', {
-                    position: {
-                        x: i * 25 + 5,
-                        y: 20
-                    },
-                    color: 'green',
-                    size: {
-                        width: 20,
-                        height: 20
-                    },
-                    stroke: {
-                        weight: 2,
-                        color: 'white'
-                    }
-                });
-            }
-            
+            spawn ('square', {
+                position: {
+                    x: 20,
+                    y: 20
+                },
+                color: 'green',
+                size: {
+                    width: 20,
+                    height: 20
+                }
+            });
         </script>
         
         <group
@@ -51,7 +47,6 @@
             state = ({
                 position: playerPos
             })
-            class = "character"
             update = (function () {
                 if (this.state.position.x > QGML.width) {
                     playerPos.x = 0;
@@ -143,8 +138,8 @@
         />
         <actor
             id = "follower"
-            sprite = "./assets/follower.png"
             state = follower
+            sprite = "./assets/follower.png"
             update = (function () {
                 if (!overlaps (this, getActor ('yellow-square'))) {
                     follower.position.x += (playerPos.x - follower.position.x) / 20;
@@ -157,7 +152,7 @@
         />
 
 
-        <text state = ({
+        <!-- <text state = ({
             position: { x: 10, y: 70 },
             size: 14,
             color: 'white'
@@ -165,11 +160,8 @@
             font = "Consolas"
         >
             your position is: ${playerPos.x}, ${playerPos.y}
-        </text>
-
-        <script setup>
-            console.log (getGroupsByClass ('character'));
-        </script>
+            also, ${getActor ('player-body').state.position.x} ${getActor ('player-body').state.position.y}
+        </text> -->
 
         <keymapper
             w|down = (() => {

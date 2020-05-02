@@ -1,3 +1,13 @@
+let randomID = n => {
+    // https://stackoverflow.com/a/48031564/10015942
+    let chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let token = '';
+    for (let i = 0; i < n; i++) {
+        token += chars [Math.floor (Math.random () * chars.length)];
+    }
+    return token;
+}
+
 class QGML {
     constructor () {
         this.p5 = null;
@@ -118,6 +128,7 @@ class QGML {
                     p.fill (255);
                     p.text (`${Math.round (QGML.frameRate)} fps`, 5, 15);
                     p.text (`${QGML.frameTime.toFixed (3)} ms frame time`, 5, 35);
+                    p.text (`${QGML.World.current.actors.length} actors`, 5, 55);
 
                     if (p.frameCount % 60 == 0) {
                         performance.measure ('measure frame time', 'start-of-draw');
@@ -180,22 +191,54 @@ QGML.Context = function () {
 
     /* user call-able functions here */
 
+    function spawn (entityClass, state) {
+        let toReturn = null;
+        let template = QGML.gameManager.actorTemplates.find (t => t.self.id === entityClass);
+        if (template) {
+            let instance = template.Create (state)
+            QGML.World.current.actors.push (instance);
+            toReturn = instance;
+        }
+        return toReturn;
+    }
+
+    function overlaps (actor1, actor2) {
+        if (actor1 instanceof QGML.Actor && actor2 instanceof QGML.Actor) {
+            let pos1 = actor1.getPosition ();
+            let pos2 = actor2.getPosition ();
+            return (pos1.x < pos2.x + actor2.state.size.width &&
+                    pos1.x + actor1.state.size.width > pos2.x &&
+                    pos1.y < pos2.y + actor2.state.size.height &&
+                    pos1.y + actor1.state.size.height > pos2.y);
+        } else {
+            console.log ('Both arguments passed to `overlaps` must be QGML actors');
+        }
+    }
+
     function loadWorld (str) {
         QGML.gameManager.loadWorld (str);
     }
 
     function getPosition (entity) {
-        return entity.state.position;
+        return entity.getPosition ();
     }
 
     function dist (x1, y1, x2, y2) {
-        if ((x1 instanceof QGML.Actor || x1 instanceof QGML.Group) && (y1 instanceof QGML.Actor || y1 instanceof QGML.Group)) {
+        if (x1.state && y1.state) {
             return Math.hypot (getPosition (x1).x - getPosition (y1).x, getPosition (x1).y - getPosition (y1).y);
         } else return Math.hypot (x2 - x1, y2 - y1)
     }
 
     function getActor (id) {
         return QGML.World.current.actors.find (a => a.id === id);
+    }
+
+    function getActorsByClass (cl) {
+        return QGML.World.current.actors.filter (a => a.class === cl);
+    }
+
+    function getGroupsByClass (cl) {
+        return QGML.World.current.groups.filter (g => g.class === cl);
     }
 
     function getGroup (id) {
@@ -426,10 +469,11 @@ QGML.Text = class Text {
  }
 
 QGML.Actor = class Actor {
-    constructor ({ group = null, state = "", id = 'default-actor', sprite, animator, customUpdate, customSetup }, worldObj) {
+    constructor ({ group = null, className = null, state = "", id = 'default-actor', sprite, animator, customUpdate, customSetup }, worldObj) {
         this.id = id;
         this.sprite = sprite;
         this.animator = animator;
+        this.class = className;
 
         this.group = worldObj.groups.find (grp => grp.name === group);
         this.state = {
@@ -482,6 +526,9 @@ QGML.Actor = class Actor {
     }
 
     setup (p) {
+        if (this.originalState) {
+            this.state = QGML.ctx.eval (this.originalState);
+        }
         this.sprite = QGML.Sprite.Create (this.sprite);
         this.animator = QGML.Animator.Create (this.animator);
         if (this.customSetup) {
@@ -492,17 +539,20 @@ QGML.Actor = class Actor {
         }
     }
 
+    getPosition () {
+        return {
+            x: this.state.position.x + (this.group ? this.group.absolutePosition.x : 0),
+            y: this.state.position.y + (this.group ? this.group.absolutePosition.y : 0)
+        }
+    }
+
     draw (p) {
+        if (this.customUpdate) this.customUpdate ();
         if (this.state.size.width && this.state.size.height) {
             p.push ();
-            let pos = this.state.position;
+            let pos = this.getPosition ();
 
             let scale = this.scale;
-
-            if (this.group) {
-                pos.x += this.group.absolutePosition.x;
-                pos.y += this.group.absolutePosition.y;
-            }
 
             if (this.state.stroke) {
                 p.strokeWeight (this.state.stroke.weight);
@@ -534,13 +584,30 @@ QGML.Actor = class Actor {
 
         }
 
-        // update the state
-        if (this.originalState) {
-            this.state = QGML.ctx.eval (this.originalState);
-        }
+        // // update the state
+        // if (this.originalState) {
+        //     // console.log (typeof this.originalState);
+        //     this.state = QGML.ctx.eval (this.originalState);
+        // }
         if (this.animator) this.animator.update ();
 
-        if (this.customUpdate) this.customUpdate ();
+    }
+}
+
+QGML.ActorTemplate = class ActorTemplate {
+    constructor (self) {
+        this.self = self;
+    }
+
+    Create (state) {
+        let actor = new QGML.Actor (this.self, QGML.World.current);
+        if (state) actor.state = state;
+        actor.class = this.self.id;
+        actor.id = `actor-${randomID (16)}`;
+
+        actor.setup ();
+
+        return actor;
     }
 }
 
@@ -566,7 +633,7 @@ QGML.Animator = class Animator {
         this.count = 0;
         this.lastAnimation = this.selectedSheet;
         this.shouldLoop = true;
-
+        this.afterPlayCb = () => {};
     }
 
     update () {
@@ -584,6 +651,7 @@ QGML.Animator = class Animator {
             if (this.shouldLoop) {
                 this.currentFrame = 0;
             } else {
+                this.afterPlayCb ();
                 this.set (this.lastAnimation);
             }
         }
@@ -593,8 +661,7 @@ QGML.Animator = class Animator {
         return this.currentFrames [this.currentFrame];
     }
 
-    play (name) {
-        console.log (name);
+    play (name, cb = () => {}) {
         for (let i = 0, keys = Object.keys (this.spritesheets); i < keys.length; i++) {
             if (keys [i] === name) {
                 this.selectedSheet = keys [i];
@@ -603,11 +670,12 @@ QGML.Animator = class Animator {
                 this.currentFrame = 0;
                 this.count = 0;
                 this.shouldLoop = false;
+                this.afterPlayCb = cb;
             }
         }
     }
 
-    set (name) {
+    set (name, cb = () => {}) {
         if (name != this.selectedSheet) {
             for (let i = 0, keys = Object.keys (this.spritesheets); i < keys.length; i++) {
                 if (keys [i] === name) {
@@ -618,6 +686,7 @@ QGML.Animator = class Animator {
                     this.count = 0;
                     this.lastAnimation = this.selectedSheet;
                     this.shouldLoop = true;
+                    this.afterPlayCb = cb;
                 }
             }
         }
@@ -652,10 +721,11 @@ QGML.Sprite = class Sprite {
 }
 
 QGML.Group = class Group {
-    constructor ({ parent = null, world = 'default-world', name = 'default-group', state = {}, customUpdate = null, customSetup = null }, worldObj) {
+    constructor ({ parent = null, world = 'default-world', className = null, name = 'default-group', state = {}, customUpdate = null, customSetup = null }, worldObj) {
         this.parent = parent;
         this.world = world;
         this.name = name;
+        this.class = className;
         
         this.state = {
             position: {
@@ -678,10 +748,20 @@ QGML.Group = class Group {
 
     }
 
+    getPosition () {
+        return this.absolutePosition;
+    }
+
     setup (p) {
+
+        if (this.originalState) {
+            this.state = QGML.ctx.eval (this.originalState);
+        }
+
         if (this.customSetup) {
             QGML.ctx.eval (this.customSetup, this) ();
         }
+        
         if (this.customUpdate) {
             this.customUpdate = QGML.ctx.eval (this.customUpdate, this);
         }
@@ -690,10 +770,10 @@ QGML.Group = class Group {
     }
 
     update () {
-        if (this.originalState) {
-            this.state = QGML.ctx.eval (this.originalState);
-            this.absolutePosition = this.state.position;
-        }
+        // if (this.originalState) {
+        //     this.state = QGML.ctx.eval (this.originalState);
+        this.absolutePosition = this.state.position;
+        // }
 
         if (this.parent) {
             this.absolutePosition = {
@@ -731,6 +811,8 @@ QGML.GameManager = class GameManager {
         this.keymappers = {};
         this.scripts = config.scripts;
         this.assets = config.assets;
+
+        this.actorTemplates = config ['actor-templates'].map (t => new QGML.ActorTemplate (t));
         
         this.vars = config.vars;
         this.defaultWorld = config.defaultWorld;
