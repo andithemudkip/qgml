@@ -1,0 +1,73 @@
+
+<!-- basic canvas configuration (default size is 300x300) -->
+<qgml
+    width = 200
+    height = 150
+>
+    <world default>
+        <!-- the player actor -->
+        <actor
+            id = 'player' // the id of the actor
+            state = ({
+                position: { // the starting position of the actor
+                    x: 80,
+                    y: 55
+                }, size: { // the starting size of the actor
+                    width: 20,
+                    height: 25
+                }
+            })
+            animator = ({
+                spritesheets: {
+                    idle: {
+                        strip: '../assets/noBKG_KnightIdle_strip.png',
+                        frames: 15, // the number of frames in the strip
+                        frameTime: 10 // how many game ticks each frame should stay on screen
+                    },
+                    run: {
+                        strip: '../assets/noBKG_KnightRun_strip.png',
+                        frames: 8,
+                        frameTime: 5
+                    }
+                }
+            })
+        />
+        <!-- declaring a variable called "player" for ease of use
+            (so we don't have to call getActor ('player') everytime)  -->
+        <var player = (getActor ('player'))/>
+        <!-- the keymapper used for movement -->
+        <keymapper
+            w|down = (function () {
+                player.state.position.y -= 2;
+
+                player.animator.set ('run');
+            })
+            s|down = (function () {
+                player.state.position.y += 2;
+
+                player.animator.set ('run');
+            })
+            a|down = (function () {
+                player.state.position.x -= 2;
+
+                player.animator.set ('run');
+
+                // tells the animator to be facing left
+                player.direction.set ('horizontal', 'left');
+            })
+            d|down = (function () {
+                player.state.position.x += 2;
+
+                player.animator.set ('run');
+
+                // tells the animator to be facing right
+                player.direction.set ('horizontal', 'right');
+            })
+
+            [w,a,s,d]|up = (function () {
+                // if all movement keys are up (w, a, s, d), set the animation to 'idle'
+                player.animator.set ('idle');
+            })
+        />
+    </world>
+</qgml>

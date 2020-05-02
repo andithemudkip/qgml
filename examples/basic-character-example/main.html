@@ -1,0 +1,47 @@
+
+<!-- basic canvas configuration (default size is 300x300) -->
+<qgml
+    width = 200
+    height = 150
+>
+    <world default>
+        <!-- the player actor -->
+        <actor
+            id = 'player' // the id of the actor
+            state = ({
+                position: { // the starting position of the actor
+                    x: 80,
+                    y: 55
+                }, size: { // the starting size of the actor
+                    width: 40,
+                    height: 40
+                }
+            })
+            sprite = "../assets/reddy.png"
+        />
+        <!-- declaring a variable called "player" for ease of use
+            (so we don't have to call getActor ('player') everytime)  -->
+        <var player = (getActor ('player'))/>
+        <!-- the keymapper used for movement -->
+        <keymapper
+            w|down = (function () {
+                player.state.position.y -= 2;
+            })
+            s|down = (function () {
+                player.state.position.y += 2;
+            })
+            a|down = (function () {
+                player.state.position.x -= 2;
+
+                // tells the sprite to be facing left
+                player.direction.set ('horizontal', 'left');
+            })
+            d|down = (function () {
+                player.state.position.x += 2;
+
+                // tells the sprite to be facing right
+                player.direction.set ('horizontal', 'right');
+            })
+        />
+    </world>
+</qgml>

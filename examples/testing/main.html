@@ -82,17 +82,17 @@
                 animator = ({
                     spritesheets: {
                         idle: {
-                            strip: './assets/noBKG_KnightIdle_strip.png',
+                            strip: '../assets/noBKG_KnightIdle_strip.png',
                             frames: 15,
                             frameTime: 10
                         },
                         run: {
-                            strip: './assets/noBKG_KnightRun_strip.png',
+                            strip: '../assets/noBKG_KnightRun_strip.png',
                             frames: 8,
                             frameTime: 5
                         },
                         attack: {
-                            strip: './assets/noBKG_KnightAttack_strip.png',
+                            strip: '../assets/noBKG_KnightAttack_strip.png',
                             frames: 22,
                             frameTime: 5
                         }
@@ -143,7 +143,7 @@
         />
         <actor
             id = "follower"
-            sprite = "./assets/follower.png"
+            sprite = "../assets/follower.png"
             state = follower
             update = (function () {
                 if (!overlaps (this, getActor ('yellow-square'))) {
@@ -249,12 +249,12 @@
             animator = ({
                 spritesheets: {
                     idle: {
-                        strip: './assets/noBKG_KnightIdle_strip.png',
+                        strip: '../assets/noBKG_KnightIdle_strip.png',
                         frames: 15,
                         frameTime: 10
                     },
                     run: {
-                        strip: './assets/noBKG_KnightRun_strip.png',
+                        strip: '../assets/noBKG_KnightRun_strip.png',
                         frames: 8,
                         frameTime: 5
                     }

@@ -16,6 +16,7 @@ class QGML {
     static setup (config) {
         this.width = config.width;
         this.height = config.height;
+        this.debug = config.debug;
         this.gameManager = new this.GameManager (config);
         this.gameManager.createWorlds ();
         this.ctx = new QGML.Context ();
@@ -170,7 +171,7 @@ class QGML {
     }
 }
 
-QGML.debug = true;
+// QGML.debug = true;
 QGML.frameRate = 0;
 QGML.frameTime = 0;
 
@@ -200,6 +201,16 @@ QGML.Context = function () {
             toReturn = instance;
         }
         return toReturn;
+    }
+
+    function destroy (entity) {
+        if (entity instanceof QGML.Actor) {
+            // remove the actor from QGML.World.current
+        } else if (entity instanceof QGML.Group) {
+            // recursively remove all children of the group, then remove the group
+        } else if (entity instanceof QGML.Text) {
+            // remove the text from QGML.World.current
+        }
     }
 
     function overlaps (actor1, actor2) {

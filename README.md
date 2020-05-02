@@ -36,6 +36,8 @@ This will serve the compiled game at `localhost:8000`
 
 **note**: serving also provides hot-reloading, so, if you modify the qgml file it should automatically reload and apply the changes in your web browser
 
+**note2**: if you edit an asset (sprite or spritesheet) you have to run qgml again, it won't hot-reload it
+
 For a full list of commands use
 
 ```sh
@@ -82,6 +84,7 @@ It contains the configuration for the canvas
 | width         | number    | the width of the canvas (default: 300)                       |
 | height        | number    | the height of the canvas (default: 300)                      |
 | rootElementID | string    | the id of the HTML element in your web page that the canvas should be appended to (default: 'qgml-game') |
+| debug         | boolean   | if this prop is present, the game will show the fps, frame-time, and number of actors in the top left |
 
 
 
@@ -324,51 +327,6 @@ any of the following formats are okay:
 * `"right"`
 * `"center"`
 * `"left"`
-
-#### Modifying the state in script [THIS MAY NOT BE TRUE ANYMORE]
-
-The state of an actor or group **cannot be altered after compilation**, but you can use **variables** instead of literal values for any of the properties, or for the whole state object
-
-```html
-<var
-	playerState = {
-		position: {
-			x: 0,
-			y: 0
-		},
-		size: {
-			width: 20,
-			height: 60
-		},
-		color: 'gray'
-	}
-/>
-<actor
-	id = "player"
-	state = playerState
-/>
-```
-
-or
-
-```html
-<var
-	playerPosition = {
-		x: 15,
-		y: 85
-	}
-/>
-<actor
-	id = "player"
-	state = {
-		position: playerPosition,
-		size: {
-			width: 50,
-			height: 50
-		}
-	}
-/>
-```
 
 
 
