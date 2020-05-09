@@ -24,8 +24,11 @@
             })
         />
 
+        <text-template id = "hello-template">
+            hello!
+        </text-template>
+
         <script setup>
-            // spawn (template_id, initial_state)
             for (let i = 0; i < 10; i++) {
                 spawn ('square', {
                     position: {
@@ -43,6 +46,20 @@
                     }
                 });
             }
+
+            spawn ('hello-template', {
+                position: {
+                    x: 50,
+                    y: 50
+                }
+            });
+
+            spawn ('hello-template', {
+                position: {
+                    x: 50,
+                    y: 80
+                }
+            });
             
         </script>
         
@@ -217,7 +234,10 @@
             })
 
             e|pressed = (() => {
-                getActor ('player-body').attack ();
+                <!-- getActor ('player-body').attack (); -->
+                getActorsByClass ('square').forEach (square => {
+                    destroy (square);
+                });
             })
 
             q|pressed = (() => {

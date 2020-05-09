@@ -195,10 +195,17 @@ QGML.Context = function () {
     function spawn (entityClass, state) {
         let toReturn = null;
         let template = QGML.gameManager.actorTemplates.find (t => t.self.id === entityClass);
-        if (template) {
+        if (template) { // its an actor
             let instance = template.Create (state)
             QGML.World.current.actors.push (instance);
             toReturn = instance;
+        } else {
+            template = QGML.gameManager.textTemplates.find (t => t.self.id === entityClass);
+            if (template) { // its a text
+                let instance = template.Create (state);
+                QGML.World.current.texts.push (instance);
+                toReturn = instance;
+            }
         }
         return toReturn;
     }
@@ -206,6 +213,7 @@ QGML.Context = function () {
     function destroy (entity) {
         if (entity instanceof QGML.Actor) {
             // remove the actor from QGML.World.current
+            QGML.World.current.actors.splice (QGML.World.current.actors.indexOf (entity), 1);
         } else if (entity instanceof QGML.Group) {
             // recursively remove all children of the group, then remove the group
         } else if (entity instanceof QGML.Text) {
@@ -605,20 +613,34 @@ QGML.Actor = class Actor {
     }
 }
 
-QGML.ActorTemplate = class ActorTemplate {
-    constructor (self) {
+QGML.Template = class Template {
+    constructor (self, type) {
         this.self = self;
+        this.type = type;
     }
 
     Create (state) {
-        let actor = new QGML.Actor (this.self, QGML.World.current);
-        if (state) actor.state = state;
-        actor.class = this.self.id;
-        actor.id = `actor-${randomID (16)}`;
-
-        actor.setup ();
-
-        return actor;
+        let toReturn = null;
+        switch (this.type) {
+            case 'actor':
+                let actor = new QGML.Actor (this.self, QGML.World.current);
+                if (state) actor.state = state;
+                actor.class = this.self.id;
+                actor.id = `actor-${randomID (16)}`;
+                actor.setup ();
+                toReturn = actor;
+                break;
+            case 'text':
+                let text = new QGML.Text (this.self, QGML.World.current);
+                if (state) text.state = state;
+                text.class = this.self.id;
+                text.id = `text-${randomID (16)}`;
+                text.setup ();
+                toReturn = text;
+                break;
+        }
+        
+        return toReturn;
     }
 }
 
@@ -818,13 +840,15 @@ QGML.World = class World {
 
 QGML.GameManager = class GameManager {
     constructor (config) {
+        console.log (config);
         this.config = config;
         this.keymappers = {};
         this.scripts = config.scripts;
         this.assets = config.assets;
 
-        this.actorTemplates = config ['actor-templates'].map (t => new QGML.ActorTemplate (t));
-        
+        this.actorTemplates = config ['actor-templates'].map (t => new QGML.Template (t, 'actor'));
+        this.textTemplates = config ['text-templates'].map (t => new QGML.Template (t, 'text'));
+
         this.vars = config.vars;
         this.defaultWorld = config.defaultWorld;
         this.selectedWorld = config.defaultWorld;

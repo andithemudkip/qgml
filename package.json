@@ -5,7 +5,7 @@
   "main": "./lib/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "terser ./includes/qgml-core.js --compress > ./includes/qgml-core.min.js && node ./bin/global.js -S ./examples/animator-example/main.html --serve",
+    "dev": "terser ./includes/qgml-core.js --compress > ./includes/qgml-core.min.js && node ./bin/global.js -S ./examples/testing/main.html --serve",
     "build-core": "terser ./includes/qgml-core.js --compress > ./includes/qgml-core.min.js"
   },
   "bin": {
@@ -13,7 +13,7 @@
   },
   "preferGlobal": true,
   "author": "AndiTheMudkip",
-  "repository": "https://github.com/andithemudkip/game-ml",
+  "repository": "https://github.com/andithemudkip/qgml",
   "license": "ISC",
   "dependencies": {
     "command-line-args": "^5.1.1",

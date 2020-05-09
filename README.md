@@ -457,6 +457,16 @@ You can check out the `spawn` function in the API section below.
 
 
 
+### Text-Template
+
+```html
+<text-template>text</text-template>
+```
+
+Just like actor templates, text templates are used to spawn text objects programmatically.
+
+
+
 ## API
 
 ### Actors
