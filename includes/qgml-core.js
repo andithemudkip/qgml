@@ -85,7 +85,11 @@ class QGML {
                 }
 
                 for (let i = 0, n = QGML.gameManager.currentActors.length; i < n; i++) {
-                    QGML.gameManager.currentActors [i].draw (p);
+                    try {
+                        QGML.gameManager.currentActors [i].draw (p);
+                    } catch (err) {
+                        console.error (err);
+                    }
                 }
 
                 for (let i = 0, n = QGML.gameManager.currentTexts.length; i < n; i++) {
@@ -126,6 +130,9 @@ class QGML {
                     QGML.ctx.eval (QGML.gameManager.scripts [QGML.World.current.id] ['update']);
 
                 if (QGML.debug) {
+                    p.noStroke ();
+                    p.fill (0, 0, 0, 150);
+                    p.rect (0, 0, 130, 70);
                     p.fill (255);
                     p.text (`${Math.round (QGML.frameRate)} fps`, 5, 15);
                     p.text (`${QGML.frameTime.toFixed (3)} ms frame time`, 5, 35);

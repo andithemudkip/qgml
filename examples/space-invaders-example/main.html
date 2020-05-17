@@ -1,0 +1,583 @@
+<qgml
+    width = 750
+    height = 800
+>
+    <actor-template
+        id = "alien1"
+        animator = ({
+            spritesheets: {
+                idle: {
+                    strip: './assets/alien1_sheet.png',
+                    frames: 2,
+                    frameTime: 20
+                }
+            }
+        })
+        setup = (function () {
+            this.matrixPos = { i: null, j: null };
+            this.setMatrixPos = function (i, j) {
+                this.matrixPos = { i, j };
+            }
+
+            this.destroy = function () {
+                score += 30;
+                spawn ('alien-explosion', {
+                    position: this.state.position,
+                    size: this.state.size
+                });
+                aliensToDestroy.push (this);
+            }
+
+            this.shoot = function () {
+                spawn ('alien-bullet', {
+                    position: {
+                        x: this.state.position.x + 15,
+                        y: this.state.position.y
+                    },
+                    size: {
+                        width: 4,
+                        height: 15
+                    },
+                    color: 'white'
+                });
+            }
+        })
+        update = (function () {
+            if (this.matrixPos.i === 4 || aliens [this.matrixPos.i + 1] [this.matrixPos.j] === null) {
+                if (Math.random () < 0.001) {
+                    this.shoot ();
+                }
+            }
+        });
+    />
+    <actor-template
+        id = "alien2"
+        animator = ({
+            spritesheets: {
+                idle: {
+                    strip: './assets/alien2_sheet.png',
+                    frames: 2,
+                    frameTime: 60
+                }
+            }
+        })
+        setup = (function () {
+            this.matrixPos = { i: null, j: null };
+            this.setMatrixPos = function (i, j) {
+                this.matrixPos = { i, j };
+            }
+
+            this.destroy = function () {
+                score += 20;
+                spawn ('alien-explosion', {
+                    position: this.state.position,
+                    size: this.state.size
+                });
+                aliensToDestroy.push (this);
+            }
+
+            this.shoot = function () {
+                spawn ('alien-bullet', {
+                    position: {
+                        x: this.state.position.x + 21,
+                        y: this.state.position.y
+                    },
+                    size: {
+                        width: 4,
+                        height: 15
+                    },
+                    color: 'white'
+                });
+            }
+        })
+        update = (function () {
+            if (this.matrixPos.i === 4 || aliens [this.matrixPos.i + 1] [this.matrixPos.j] === null) {
+                if (Math.random () < 0.001) {
+                    this.shoot ();
+                }
+            }
+        });
+    />
+    <actor-template
+        id = "alien3"
+        animator = ({
+            spritesheets: {
+                idle: {
+                    strip: './assets/alien3_sheet.png',
+                    frames: 2,
+                    frameTime: 30
+                }
+            }
+        })
+        setup = (function () {
+            this.matrixPos = { i: null, j: null };
+            this.setMatrixPos = function (i, j) {
+                this.matrixPos = { i, j };
+            }
+
+            this.destroy = function () {
+                score += 10;
+                spawn ('alien-explosion', {
+                    position: this.state.position,
+                    size: this.state.size
+                });
+                aliensToDestroy.push (this);
+            }
+
+            this.shoot = function () {
+                spawn ('alien-bullet', {
+                    position: {
+                        x: this.state.position.x + 23,
+                        y: this.state.position.y
+                    },
+                    size: {
+                        width: 4,
+                        height: 15
+                    },
+                    color: 'white'
+                });
+            }
+        })
+        update = (function () {
+            if (this.matrixPos.i === 4 || aliens [this.matrixPos.i + 1] [this.matrixPos.j] === null) {
+                if (Math.random () < 0.001) {
+                    this.shoot ();
+                }
+            }
+        });
+    />
+
+    <actor-template
+        id = "player-bullet"
+        update = (function () {
+            this.state.position.y -= 13;
+            if (this.state.position.y < 0) {
+                spawn ('shield-explosion', {
+                    position: {
+                        x: this.state.position.x,
+                        y: -5
+                    },
+                    size: this.state.size
+                });
+                bulletsToDestroy.push (this);
+            }
+
+            // destroy here needs to be fixed
+            for (let i = 0; i < 5; i++) {
+                for (let alien of aliens [i]) {
+                    if (alien && overlaps (this, alien)) {
+                        alien.destroy ();
+                        bulletsToDestroy.push (this);
+                    }
+                }
+            }
+
+            for (let ufo of getActorsByClass ('ufo')) {
+                if (overlaps (this, ufo)) {
+                    ufo.destroy ();
+                    bulletsToDestroy.push (this);
+                }
+            }
+
+            for (let piece of shieldPieces) {
+                if (piece && overlaps (this, piece)) {
+                    spawn ('shield-explosion', {
+                        position: this.state.position,
+                        size: this.state.size
+                    });
+                    bulletsToDestroy.push (this);
+                    piece.takeDamage ();
+                }
+            }
+            
+        })
+    />
+
+    <actor-template
+        id = "alien-bullet"
+        update = (function () {
+            this.state.position.y += 10;
+            if (this.state.position.y > QGML.height) bulletsToDestroy.push (this);
+
+            if (overlaps (this, player)) {
+                // take one life away
+                lives --;
+                spawn ('shield-explosion', {
+                    position: this.state.position,
+                    size: this.state.size
+                });
+                bulletsToDestroy.push (this);
+                // should also check if lives === 0 and end the game
+                if (lives === 0) loadWorld ('over-screen');
+            } else {
+                for (let piece of shieldPieces) {
+                    if (piece && overlaps (this, piece)) {
+                        spawn ('shield-explosion', {
+                            position: this.state.position,
+                            size: this.state.size
+                        });
+                        bulletsToDestroy.push (this);
+                        piece.takeDamage ();
+                    }
+                }
+            }
+        })
+    />
+
+    <actor-template
+        id = "shield-spawner"
+        setup = (function () {
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if ((i == 1 || i == 2) && j == 2) continue;
+                    let piece = spawn ('shield-piece', {
+                        position: {
+                            x: this.state.position.x + i * 30,
+                            y: this.state.position.y + j * 30
+                        },
+                        size: {
+                            width: 30,
+                            height: 30
+                        },
+                        color: '#00FC00'
+                    })
+                    shieldPieces.push (piece);
+                }
+            }
+        });
+    />
+
+    <actor-template
+        id = "shield-piece"
+        setup = (function () {
+            this.health = 3;
+            this.color = 'rgba(0, 252, 0, 1)';
+            this.mapRange = (value, x1, y1, x2, y2) => (value - x1) * (y2 - x2) / (y1 - x1) + x2;
+            this.takeDamage = function () {
+                this.health--;
+
+                let alpha = this.mapRange (this.health, 3, 0, 1, 0);
+                this.state.color = `rgba(0, 252, 0, ${alpha.toFixed (2)})`;
+                if (this.health <= 0) {
+                    shieldPiecesToDestroy.push (this);
+                }
+            }
+        })
+    />
+
+    <actor-template
+        id = "alien-explosion"
+        sprite = "./assets/alien_explosion.png"
+        setup = (function () {
+            this.lifespan = 5;
+        })
+        update = (function () {
+            this.lifespan--;
+            if (!this.lifespan) {
+                explosionsToDestroy.push (this);
+            }
+        })
+    />
+
+    <actor-template
+        id = "shield-explosion"
+        sprite = "./assets/shield_explosion.png"
+        setup = (function () {
+            this.lifespan = 5;
+        })
+        update = (function () {
+            this.lifespan--;
+            if (!this.lifespan) {
+                explosionsToDestroy.push (this);
+            }
+        })
+    />
+
+    <actor-template
+        id = "ufo"
+        sprite = "./assets/ufo_sheet.png"
+        setup = (function () {
+            this.direction = 1;
+            this.setDirection = function (dir) {
+                this.direction = dir;
+            }
+
+            this.destroy = function () {
+                score += 300;
+                spawn ('alien-explosion', {
+                    position: this.state.position,
+                    size: this.state.size
+                });
+                ufosToDestroy.push (this);
+            }
+        })
+        update = (function () {
+            this.state.position.x += this.direction * 4;
+            if (this.direction > 0) {
+                if (this.state.position.x > QGML.width + 100) {
+
+                }
+            } else {
+                if (this.state.position.x < -100) {
+                    ufosToDestroy.push (this);
+                }
+            }
+        })
+    />
+
+    <var score = 0/>
+
+    <world id = "game" default>
+        <var
+            currentRow = 4
+            aliens = ([[], [], [], [], []])
+            frameCount = 0
+            rowsDirections = ([1, 1, 1, 1, 1])
+            bulletsToDestroy = ([])
+            aliensToDestroy = ([])
+            shieldPiecesToDestroy = ([])
+            explosionsToDestroy = ([])
+            ufosToDestroy = ([])
+            shieldPieces = ([])
+            rowsHeights = ([60, 60, 60, 60, 60])
+            lastSwitch = 1
+            lives = 3
+            numberOfAliens = 55
+        />
+        <script setup>
+
+            for (let i = 0; i < 4; i++) {
+                spawn ('shield-spawner', {
+                    position: {
+                        x: 50 + 180 * i,
+                        y: 630
+                    }, size: { width: 0, height: 0 }
+                });
+            }
+
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 11; j++) {
+                    let type = 1;
+                    if (i == 1 || i == 2) type = 2;
+                    if (i == 3 || i == 4) type = 3;
+                    let alien = spawn (`alien${type}`, {
+                        position: {
+                            x: j * 60 + 28,
+                            y: i * 54 + rowsHeights [i]
+                        },
+                        size: {
+                            width: (type === 1) ? 34 : ((type === 2) ? 46 : 50),
+                            height: 34
+                        }
+                    });
+                    alien.setMatrixPos (i, j);
+                    aliens [i].push (alien);
+                }
+            }
+
+            
+        </script>
+
+        <script update>
+            if (frameCount % (Math.floor ((numberOfAliens / 2)) || 1) == 0) {
+                let lastAlien = null,
+                    firstAlien = null;
+                let aliveAliens = aliens [currentRow].filter (a => a !== null);
+                if (aliveAliens.length) {
+                    lastAlien = aliveAliens [aliveAliens.length - 1];
+                    firstAlien = aliveAliens [0];
+                }
+                if (lastAlien && lastAlien.state.position.x > QGML.width - 60) {
+                    rowsDirections = [-1, -1, -1, -1, -1];
+                    if (lastSwitch == 1) {
+                        for (let i = 0; i < rowsHeights.length; i++) {
+                            rowsHeights [i] += 34;
+                        }
+                    }
+                    lastSwitch = -1;
+                }
+                else if (firstAlien && firstAlien.state.position.x < 27) {
+                    rowsDirections = [1, 1, 1, 1, 1];
+                    if (lastSwitch == -1) {
+                        for (let i = 0; i < rowsHeights.length; i++) {
+                            rowsHeights [i] += 34;
+                        }
+                    }
+                    lastSwitch = 1;
+                }
+
+                for (let alien of aliens [currentRow]) {
+                    if (alien) {
+                        alien.state.position.x += rowsDirections [currentRow] * 10;
+                        alien.state.position.y = currentRow * 54 + rowsHeights [currentRow];
+                    }
+                }
+
+                if (currentRow > 0) currentRow --;
+                else currentRow = 4;
+            }
+
+
+            for (let bullet of bulletsToDestroy) {
+                destroy (bullet);
+            }
+
+            bulletsToDestroy = [];
+
+            for (let i = 0; i < aliensToDestroy.length; i++) {
+                numberOfAliens = 0;
+                for (let j = 0; j < 5; j++) {
+                    for (let k = 0; k < aliens [j].length; k++) {
+                        if (aliens [j] [k]) numberOfAliens ++;
+                        if (aliens [j] [k] == aliensToDestroy [i]) {
+                            aliens [j] [k] = null;
+                        }
+                    }
+                }
+                destroy (aliensToDestroy [i]);
+            }
+
+            aliensToDestroy = [];
+
+            for (let i = 0; i < shieldPiecesToDestroy.length; i++) {
+                for (let j = 0; j < shieldPieces.length; j++) {
+                    if (shieldPieces [j] == shieldPiecesToDestroy [i]) {
+                        shieldPieces [j] = null;
+                    }
+                }
+                destroy (shieldPiecesToDestroy [i]);
+            }
+
+            shieldPiecesToDestroy = [];
+
+            for (let explosion of explosionsToDestroy) {
+                destroy (explosion);
+            }
+
+            explosionsToDestroy = [];
+
+            for (let ufo of ufosToDestroy) {
+                destroy (ufo);
+            }
+
+            ufosToDestroy = [];
+
+            if (Math.random () < 0.0004) {
+                if (!getActorsByClass ('ufo').length) {
+                    let dir = Math.sign (0.5 - Math.random ());
+                    spawn ('ufo', {
+                        position: {
+                            x: (dir > 0) ? (- 100) : (QGML.width + 100),
+                            y: 10
+                        },
+                        size: {
+                            width: 98,
+                            height: 44
+                        }
+                    }).setDirection (dir);
+                }
+                
+            }
+
+            if (numberOfAliens === 1) {
+                loadWorld ('over-screen');
+            }
+
+            frameCount++;
+        </script>
+        <actor
+            id = "background"
+            state = ({
+                size: {
+                    width: QGML.width,
+                    height: QGML.height
+                },
+                position: {
+                    x: 0,
+                    y: 0
+                },
+                color: 'black'
+            })
+        />
+
+        <actor
+            id = 'laser_cannon'
+            state = ({
+                size: {
+                    width: 54,
+                    height: 34
+                },
+                position: {
+                    x: QGML.width / 2 - 54 / 2,
+                    y: QGML.height - 50
+                }
+            })
+            sprite = "./assets/laser_cannon_sheet.png"
+        />
+
+        <var player = (getActor ('laser_cannon'))/>
+
+        <!-- fix <text> without font throwing error -->
+        <text state = ({ position: { x: 0, y: 0 }, color: 'white', size: 32}) font = "Consolas">
+            SCORE: ${score}
+        </text>
+
+        <text state = ({ position: { x: 0, y: QGML.height - 60 }, color: 'white', size: 32}) font = "Consolas">
+            LIVES: ${lives}
+        </text>
+
+        <keymapper
+            right_arrow|down = (function () {
+                player.state.position.x += 3;
+            })
+            left_arrow|down = (function () {
+                player.state.position.x -= 3;
+            })
+            space|pressed = (function () {
+                if (!getActorsByClass ('player-bullet').length) {
+                    spawn ('player-bullet', {
+                        position: {
+                            x: player.state.position.x + 25,
+                            y: player.state.position.y - 8
+                        },
+                        size: {
+                            width: 4,
+                            height: 20
+                        },
+                        color: 'green'
+                    });
+                }
+            })
+        />
+    </world>
+
+    <world
+        id = "over-screen"
+    >
+        <actor
+            id = "background"
+            state = ({
+                size: {
+                    width: QGML.width,
+                    height: QGML.height
+                },
+                position: { x: 0, y: 0 },
+                color: 'black'
+            })
+        />
+        <text state = ({ position: { x: 375, y: 200 }, align: 'center', size: 48, color: 'white' }) font = "Consolas">
+            GAME OVER!
+            SCORE: ${score}
+        </text>
+
+        <text state = ({ position: { x: 375, y: 400 }, align: 'center', size: 28, color: 'white' }) font = "Consolas">
+            PRESS SPACE TO RESTART
+        </text>
+        <keymapper
+            space|pressed = (function () {
+                // loadWorld tells variables from the game world arent defined --- fix this
+                location.reload ();
+            });
+        />
+    </world>
+</qgml>
