@@ -84,7 +84,7 @@ It contains the configuration for the canvas
 | width         | number    | the width of the canvas (default: 300)                       |
 | height        | number    | the height of the canvas (default: 300)                      |
 | rootElementID | string    | the id of the HTML element in your web page that the canvas should be appended to (default: 'qgml-game') |
-| debug         | boolean   | if this prop is present, the game will show the fps, frame-time, and number of actors in the top left |
+| debug         | boolean   | if this prop is present, the game will show debug info in the top-left corner |
 
 
 
@@ -162,7 +162,7 @@ spritesheets: {
 
 example of an animation strip ([credit](https://oco.itch.io/medieval-fantasy-character-pack)):
 
-![](https://raw.githubusercontent.com/andithemudkip/game-ml/master/example/assets/noBKG_KnightIdle_strip.png)
+![](https://raw.githubusercontent.com/andithemudkip/qgml/master/examples/assets/noBKG_KnightIdle_strip.png)
 
 ##### Example
 
@@ -277,10 +277,12 @@ A single `var` tag can be used to declare multiple variables, for example
 
 It is used to display text on the canvas
 
-| prop  | data type | description                                                  |
-| ----- | --------- | ------------------------------------------------------------ |
-| state | object    | a state object                                               |
-| font  | string    | the name of a web-safe font or the name of a font that you're already loading on your web page |
+| prop   | data type | description                                                  |
+| ------ | --------- | ------------------------------------------------------------ |
+| state  | object    | a state object                                               |
+| font   | string    | the name of a web-safe font or the name of a font that you're already loading on your web page |
+| setup  | function  | a function that is called once when the world is loaded      |
+| update | function  | a function that is called every frame                        |
 
 You can use placeholders inside of it to display the values of variables
 
@@ -304,6 +306,7 @@ You can use placeholders inside of it to display the values of variables
 | stroke   | Object { weight: Number, color: String } | the stroke / outline   | actor, text        |
 | style    | String                                   | the style of the text  | text               |
 | align    | String                                   | the text alignment     | text               |
+| rotation | Number                                   | the rotation           | actor, text        |
 
 #### color
 
@@ -313,7 +316,7 @@ any of the following formats are okay:
 * `"rgba(0, 25, 125, 0.5)"`
 * `"rgba(0,0,0,0)"`
 * `"red"`, `"blue"`, `"lightblue"`, etc.
-* if color is omitted or set to `false` the rectangle will be transparent
+* if color is omitted or set to `false` the text or actor will be transparent (unless it has a sprite or animator)
 
 #### style
 
@@ -419,10 +422,10 @@ Scripts are specific to the world they are declared in.
 
 
 
-### Actor-Template
+### Actor Template
 
 ```html
-<actor-template/>
+<actor:template/>
 ```
 
 Templates are used to spawn actors of the same type programmatically (from scripts and such).
@@ -430,7 +433,7 @@ Templates are used to spawn actors of the same type programmatically (from scrip
 An example of an actor template would be:
 
 ```html
-<actor-template
+<actor:template
 	id = "zombie"
 	sprite = "./assets/zombie.png"
 	update = (function () {
@@ -455,18 +458,6 @@ spawn ('zombie', {
 
 You can check out the `spawn` function in the API section below.
 
-
-
-### Text-Template
-
-```html
-<text-template>text</text-template>
-```
-
-Just like actor templates, text templates are used to spawn text objects programmatically.
-
-
-
 ## API
 
 ### Actors
@@ -475,9 +466,21 @@ Just like actor templates, text templates are used to spawn text objects program
 
 `getActorsByClass (class: String)` - returns an array of actors with the specified class
 
-`<Actor>.state` - returns the state of the actor - **this is read-only, the state is not meant to be modified**
+`<Actor>.state` - returns the state of the actor
 
 `<Actor>.direction` - returns the direction that actor is facing on both axis
+
+`<Actor>.active` - whether the actor is active or not (an inactive actor isn't drawn on screen or updated)
+
+`<Actor>.getActive ()` - returns `true` if both the actor and all its parent groups are active, otherwise returns `false`
+
+*for example, consider the following hierarchy:*
+
+* group1 - `active = false`
+  * group2 - `active = true`
+    * actor - `active = true`
+
+*in this case, `actor.getActive ()` will return false*
 
 `<Actor>.getPosition ()` - returns the actor's position
 
@@ -496,9 +499,15 @@ Just like actor templates, text templates are used to spawn text objects program
 
 `<Actor>.animator` - returns the animator of an actor
 
+`<Actor>.sprite.get ()` - returns the current sprite as a p5 image
+
+`<Actor>.sprite.set (spriteID: String)` - sets the current sprite to a preloaded sprite with the given id
+
+`<Actor>.setParent (groupID: String)` - sets the group with the given ID as the actor's parent group
+
 `overlaps (a1: Actor, a2: Actor)` - returns true if the actors overlap
 
-`spawn (actorTemplateID: String, initialState: stateObject)` - spawns a new actor from a specified actor-template, assigns its state to the initial state object, and assigns its `class` to the template id; it returns the new actor, or `null` if the specified template id does not exist.
+`spawn (actorTemplateID: String, initialState: stateObject[, parentID: String])` - spawns a new actor from a specified actor-template, assigns its state to the initial state object, and assigns its `class` to the template id; it returns the new actor, or `null` if the specified template id does not exist. Additionally, as a third parameter you can pass the ID of a group to set it as the actor's parent group.
 
 ### Animator
 
@@ -510,9 +519,23 @@ Just like actor templates, text templates are used to spawn text objects program
 
 `getGroup (id: String)` - returns the group with the specified ID
 
-`<Group>.state` - returns the state of the group - **this is read-only, the state is not meant to be modified**
+`getGroupsByClass (class: String)` - returns an array of groups with the specified class
+
+`<Group>.state` - returns the state of the group
+
+`<Group>.active` - whether the group is active or not (an inactive group isn't updated and its children are hidden)
+
+`<Group>.getActive ()` - returns `true` if both the group and all its parents are active, otherwise returns `false`
+
+*for example:*
+
+* group1 - `active = false` - `getActive () == false`
+  * group2 - `active = true`  - `getActive () == false`
+* group3 - `active = true` - `getActive () == true`
 
 `<Group>.getPosition ()` - returns the position of the group
+
+`<Group>.setParent (groupID: String)` - sets the group with the given ID as the group's parent
 
 ### Entity
 
@@ -523,3 +546,5 @@ Entity = either Actor or Group
 `dist (e1: Entity, e2: Entity)` - returns the distance between the two entities' positions
 
 `getPosition (e: Entity)` - returns the entity's position
+
+`destroy (e: Entity)` - sets the entity's `active` to `false` and removes it at the end of the current frame (currently only works on **actors** and **text**)

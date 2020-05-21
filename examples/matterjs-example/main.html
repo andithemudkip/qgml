@@ -1,0 +1,77 @@
+<qgml>
+    <actor:template
+        id = "box"
+        setup = (function () {
+            this.body = Matter.Bodies.rectangle (
+                this.state.position.x,
+                this.state.position.y,
+                this.state.size.width,
+                this.state.size.height
+            );
+            world.add (engine.world, this.body);
+        })
+        update = (function () {
+            this.state.position = {
+                x: this.body.position.x - this.state.size.width / 2,
+                y: this.body.position.y - this.state.size.height / 2
+            }
+            this.state.rotation = this.body.angle;
+        })
+    />
+    <world>
+        <var
+            engine = (Matter.Engine.create ())
+            world = (Matter.World)
+        />
+        <script setup>
+            Matter.Engine.run (engine);
+        </script>
+        
+        <actor
+            state = ({
+                position: {
+                    x: 100,
+                    y: 220
+                },
+                size: {
+                    width: 100,
+                    height: 10
+                },
+                color: 'green'
+            })
+            setup = (function () {
+                this.body = Matter.Bodies.rectangle (
+                    this.state.position.x,
+                    this.state.position.y,
+                    this.state.size.width,
+                    this.state.size.height,
+                    { isStatic: true }
+                );
+                world.add (engine.world, this.body);
+            })
+            update = (function () {
+                this.state.position = {
+                    x: this.body.position.x - this.state.size.width / 2,
+                    y: this.body.position.y - this.state.size.height / 2
+                }
+                this.state.rotation = this.body.angle;
+            })
+        />
+
+        <keymapper
+            e|pressed = (function () {
+                spawn ('box', {
+                    position: {
+                        x: Math.floor (Math.random () * QGML.width),
+                        y: 25
+                    },
+                    size: {
+                        width: 50,
+                        height: 50
+                    },
+                    color: 'red'
+                });
+            })
+        />
+    </world>
+</qgml>

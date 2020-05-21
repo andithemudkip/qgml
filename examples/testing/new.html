@@ -1,0 +1,83 @@
+<qgml
+    width = 300
+    height = 300
+    debug
+>
+    <actor:template
+        id = "red"
+    />
+    <sprite id = "red-1" path = "../assets/reddy.png" />
+
+    <world default>
+
+        <actor
+            id = "blue"
+            state = ({
+                position: {
+                    x: 100,
+                    y: 100
+                },
+                size: {
+                    width: 50,
+                    height: 50
+                },
+                color: 'lightblue',
+            })
+        />
+
+        <actor
+            id = "yellow"
+            state = ({
+                position: {
+                    x: 200,
+                    y: 100
+                },
+                size: {
+                    width: 50,
+                    height: 50
+                },
+                color: 'yellow'
+            })
+        />
+
+        <var
+            blue = (getActor ('blue'))
+            yellow = (getActor ('yellow'))
+        />
+
+        <actor
+            id = "overlap"
+            state = ({
+                position: {
+                    x: 200,
+                    y: 200
+                },
+                size: {
+                    width: 50,
+                    height: 50
+                },
+                color: 'red'
+            })
+            update = (function () {
+                if (overlaps (blue, yellow)) {
+                    this.state.color = 'green'
+                } else this.state.color = 'red';
+            })
+        />
+
+        <keymapper
+            d|down = (function () {
+                blue.state.position.x++;
+            })
+            a|down = (function () {
+                blue.state.position.x--;
+            })
+            w|down = (function () {
+                blue.state.position.y--;
+            })
+            s|down = (function () {
+                blue.state.position.y++;
+            })
+        />
+    </world>
+</qgml>

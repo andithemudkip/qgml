@@ -1,11 +1,11 @@
 {
   "name": "@qgml/cli",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Quick Game Markup Language",
   "main": "./lib/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "terser ./includes/qgml-core.js --compress > ./includes/qgml-core.min.js && node ./bin/global.js -S ./examples/space-invaders-example/main.html --serve",
+    "dev": "terser ./includes/qgml-core.js --compress > ./includes/qgml-core.min.js && node ./bin/global.js -S ./examples/matterjs-example/main.html --serve --include ./examples/matterjs-example/matter.js",
     "build-core": "terser ./includes/qgml-core.js --compress > ./includes/qgml-core.min.js"
   },
   "bin": {
